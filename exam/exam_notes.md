@@ -40,3 +40,23 @@ kubectl scale rs --help
 
 
 
+The correct answer is Shows all nested fields recursively in a single output
+
+The --recursive flag is useful for getting a complete view of a resource's structure:
+
+kubectl explain pod.spec --recursive
+This will show:
+
+All top-level fields under spec
+All nested fields within those fields
+The complete hierarchy in one output
+Compare this to the default behavior:
+
+kubectl explain pod.spec
+This only shows the immediate fields under spec, requiring you to drill down manually to see nested fields.
+
+Use --recursive when:
+
+You want to see the complete structure quickly
+You're searching for a specific field but don't know its exact path
+You want to understand the full scope of available options
