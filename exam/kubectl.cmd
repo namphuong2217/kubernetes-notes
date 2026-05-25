@@ -78,7 +78,7 @@ k edit rs new-replica-set
 
 k get po -o wide
 k delete pod <pod-name>
-# k get rs -w will reflect changes in other terminal
+# k get rs -w (watch) will reflect changes in other terminal
 # Go on deleting all PODs one by one
 
 # Q15
