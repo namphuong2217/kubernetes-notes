@@ -1,4 +1,655 @@
 # Lab 6 
+## 6.5 Validating and Mutating Admission Controllers
+```cmd
+         Welcome to the KodeKloud Hands-On lab                                                                                                               
+    __ ______  ____  ________ __ __    ____  __  ______ 
+   / //_/ __ \/ __ \/ ____/ //_// /   / __ \/ / / / __ \
+  / ,< / / / / / / / __/ / ,<  / /   / / / / / / / / / /
+ / /| / /_/ / /_/ / /___/ /| |/ /___/ /_/ / /_/ / /_/ / 
+/_/ |_\____/_____/_____/_/ |_/_____/\____/\____/_____/  
+                                                        
+                All rights reserved                                                                                                                           
+
+controlplane ~ ➜  #1-3
+
+controlplane ~ ➜  k create ns webhook-demo
+namespace/webhook-demo created
+
+controlplane ~ ➜  #4
+
+controlplane ~ ➜  k create secret --help
+Create a secret with specified type.
+
+ A docker-registry type secret is for accessing a container registry.
+
+ A generic type secret indicate an Opaque secret type.
+
+ A tls type secret holds TLS certificate and its associated key.
+
+Available Commands:
+  docker-registry   Create a secret for use with a Docker registry
+  generic           Create a secret from a local file, directory, or literal value
+  tls               Create a TLS secret
+
+Usage:
+  kubectl create secret (docker-registry | generic | tls) [options]
+
+Use "kubectl create secret <command> --help" for more information about a given command.
+Use "kubectl options" for a list of global command-line options (applies to all commands).
+
+controlplane ~ ➜  k create secret tls --help
+Create a TLS secret from the given public/private key pair.
+
+ The public/private key pair must exist beforehand. The public key certificate must be .PEM encoded
+and match the given private key.
+
+Examples:
+  # Create a new TLS secret named tls-secret with the given key pair
+  kubectl create secret tls tls-secret --cert=path/to/tls.crt --key=path/to/tls.key
+
+Options:
+    --allow-missing-template-keys=true:
+        If true, ignore any errors in templates when a field or map key is missing in the
+        template. Only applies to golang and jsonpath output formats.
+
+    --append-hash=false:
+        Append a hash of the secret to its name.
+
+    --cert='':
+        Path to PEM encoded public key certificate.
+
+    --dry-run='none':
+        Must be "none", "server", or "client". If client strategy, only print the object that
+        would be sent, without sending it. If server strategy, submit server-side request without
+        persisting the resource.
+
+    --field-manager='kubectl-create':
+        Name of the manager used to track field ownership.
+
+    --key='':
+        Path to private key associated with given certificate.
+
+    -o, --output='':
+        Output format. One of: (json, yaml, kyaml, name, go-template, go-template-file, template,
+        templatefile, jsonpath, jsonpath-as-json, jsonpath-file).
+
+    --save-config=false:
+        If true, the configuration of current object will be saved in its annotation. Otherwise,
+        the annotation will be unchanged. This flag is useful when you want to perform kubectl
+        apply on this object in the future.
+
+    --show-managed-fields=false:
+        If true, keep the managedFields when printing objects in JSON or YAML format.
+
+    --template='':
+        Template string or path to template file to use when -o=go-template, -o=go-template-file.
+        The template format is golang templates
+        [http://golang.org/pkg/text/template/#pkg-overview].
+
+    --validate='strict':
+        Must be one of: strict (or true), warn, ignore (or false). "true" or "strict" will use a
+        schema to validate the input and fail the request if invalid. It will perform server side
+        validation if ServerSideFieldValidation is enabled on the api-server, but will fall back
+        to less reliable client-side validation if not. "warn" will warn about unknown or
+        duplicate fields without blocking the request if server-side field validation is enabled
+        on the API server, and behave as "ignore" otherwise. "false" or "ignore" will not perform
+        any schema validation, silently dropping any unknown or duplicate fields.
+
+Usage:
+  kubectl create secret tls NAME --cert=path/to/cert/file --key=path/to/key/file
+[--dry-run=server|client|none] [options]
+
+Use "kubectl options" for a list of global command-line options (applies to all commands).
+
+controlplane ~ ➜  k create secret tls --cert='/root/keys/webhook-server-tls.crt' --key='/root/keys/webhook-server-tls.key'
+error: exactly one NAME is required, got 0
+See 'kubectl create secret tls -h' for help and examples
+
+controlplane ~ ✖ k create secret tls webhook-server-tls --cert='/root/keys/webhook-server-tls.crt' --key='/root/key
+s/webhook-server-tls.key'
+secret/webhook-server-tls created
+
+controlplane ~ ➜  #5
+
+controlplane ~ ➜  #4
+
+controlplane ~ ➜  k create secret tls webhook-server-tls --cert='/root/keys/webhook-server-tls.crt' --key='/root/ke
+ys/webhook-server-tls.key' -n webhook-demo
+secret/webhook-server-tls created
+
+controlplane ~ ➜  #5
+
+controlplane ~ ➜  k create -f /root/webhook-deployment.yaml
+deployment.apps/webhook-server created
+
+controlplane ~ ➜  vi /root/webhook-deployment.yaml
+
+controlplane ~ ➜  #6
+
+controlplane ~ ➜  k create -f /root/webhook-service.yaml
+service/webhook-server created
+
+controlplane ~ ➜  vi /root/webhook-service.yaml
+
+controlplane ~ ➜  cat /root/webhook-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: webhook-server
+  namespace: webhook-demo
+spec:
+  selector:
+    app: webhook-server
+  ports:
+    - port: 443
+      targetPort: webhook-api
+
+controlplane ~ ➜  cat /root/webhook-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webhook-server
+  namespace: webhook-demo
+  labels:
+    app: webhook-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webhook-server
+  template:
+    metadata:
+      labels:
+        app: webhook-server
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1234
+      containers:
+      - name: server
+        image: stackrox/admission-controller-webhook-demo:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8443
+          name: webhook-api
+        volumeMounts:
+        - name: webhook-tls-certs
+          mountPath: /run/secrets/tls
+          readOnly: true
+      volumes:
+      - name: webhook-tls-certs
+        secret:
+          secretName: webhook-server-tls
+
+controlplane ~ ➜  #7
+
+controlplane ~ ➜  cat /root/webhook-configuration.yaml
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: demo-webhook
+webhooks:
+  - name: webhook-server.webhook-demo.svc
+    clientConfig:
+      service:
+        name: webhook-server
+        namespace: webhook-demo
+        path: "/mutate"
+      caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURQekNDQWllZ0F3SUJBZ0lVVFFSV1lUZU1hdXBHZUt3ZUNEbGUyb3ZWd2pFd0RRWUpLb1pJaHZjTkFRRUwKQlFBd0x6RXRNQ3NHQTFVRUF3d2tRV1J0YVhOemFXOXVJRU52Ym5SeWIyeHNaWElnVjJWaWFHOXZheUJFWlcxdgpJRU5CTUI0WERUSTJNRFV5T0RFMU1EUXpNVm9YRFRJMk1EWXlOekUxTURRek1Wb3dMekV0TUNzR0ExVUVBd3drClFXUnRhWE56YVc5dUlFTnZiblJ5YjJ4c1pYSWdWMlZpYUc5dmF5QkVaVzF2SUVOQk1JSUJJakFOQmdrcWhraUcKOXcwQkFRRUZBQU9DQVE4QU1JSUJDZ0tDQVFFQTFsSmRaQ000Ry9MUHZlZFFST1pjaXFtOC9UVUFmY3AxdHNVRgpIbkRueHF2MDBOMmFTcndFRWpvRVVJZ1pHSm1UM2oyUkl4L2FZSEJFL0h4Z0pvdy91NG9tSlN1MGtycEYvY0RsCnQyY3VJaVpuNEhKRFJoNDlmYlV0Lzg2WklSY2dCZ1IvTDFrd01Ec3l6UDRaSUE5b29pMjNFVUZiRERZY25zS3QKREVucytBWGpQMEcrRjQxMVE5c2RFWGM0VzM3TStUSmVITDB6Y0d5SVJSbVZUeFdHRDF3TlJ1L2grZkZEVlBpOQo1NlBXQ2NDQmVNRUVWT05mRWZxbzR5U1laMTFISGd4UDZTM2c1d3gzRGhvODdLckt2cG5uend1R3c4Y2FRaEgzCjRKU1paQ25NaHlzNkpVZnJ1NFo0ZXBicms4Q1RyUDBTd3ZGenJQYWd5OGorUVVDOE1RSURBUUFCbzFNd1VUQWQKQmdOVkhRNEVGZ1FVbDByTk1SMjhWaGxEM21BTWFwNVFjc2MveE5Jd0h3WURWUjBqQkJnd0ZvQVVsMHJOTVIyOApWaGxEM21BTWFwNVFjc2MveE5Jd0R3WURWUjBUQVFIL0JBVXdBd0VCL3pBTkJna3Foa2lHOXcwQkFRc0ZBQU9DCkFRRUFuZXg2UWZoTU14aDRtNzhxZkZqcjRnbUJlb1gwNW5XdVJqQzEra1AxTHhrVFdOS2RUZko0QTdXTnhJU1EKS1hFNlBsUWJQRXhDWWV2STF3T3ljVDBSZFYyQjMxVTdocUJ0eVFlRWtmdEMrSSttcGdwZFFqUHlzRk90dVQyUApSdTNOMHlaclNRY3RoNGI3UW9OVkVVN0g5RUFKa1VLUkxoQTg0TnpKUHA1SXRmRVZBRjlSL1VUT1JNd3YvbXlmCi9yNkVlTTJUZ3ZMMnhNenFiQkRoOGlkYlU5MjI2SVcyZC9IRDl0MFJnUUQwUG0vQ0tkM0lCcFFWdEU4UVJHWjMKTHFHTHEyRG52QVo1Vjc3bENOTzdwQytaaGhWOWZjM0VNdzJIQkFoQnUwTlhHVXdlL0xrTWZGdHY3bnludWZBcQo3d1VVT1pPOW8vaW1oQUFLTVE1bW1JSS9kZz09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+    rules:
+      - operations: [ "CREATE" ]
+        apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["pods"]
+    admissionReviewVersions: ["v1beta1"]
+    sideEffects: None
+
+controlplane ~ ➜  k create -f /root/webhook-configuration.yaml
+mutatingwebhookconfiguration.admissionregistration.k8s.io/demo-webhook created
+
+controlplane ~ ➜  #8
+
+controlplane ~ ➜  #9
+
+controlplane ~ ➜  cat /root/pod-with-defaults.yaml
+# A pod with no securityContext specified.
+# Without the webhook, it would run as user root (0). The webhook mutates it
+# to run as the non-root user with uid 1234.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-with-defaults
+  labels:
+    app: pod-with-defaults
+spec:
+  restartPolicy: OnFailure
+  containers:
+    - name: busybox
+      image: busybox
+      command: ["sh", "-c", "echo I am running as user $(id -u)"]
+
+controlplane ~ ➜  k create -f /root/pod-with-defaults.yaml
+pod/pod-with-defaults created
+
+controlplane ~ ➜  
+
+controlplane ~ ➜  #10
+
+controlplane ~ ➜  #11
+
+controlplane ~ ➜  k describe pod pod-with-defaults 
+Name:             pod-with-defaults
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             controlplane/10.244.167.78
+Start Time:       Thu, 28 May 2026 15:15:02 +0000
+Labels:           app=pod-with-defaults
+Annotations:      <none>
+Status:           Succeeded
+IP:               172.17.0.6
+IPs:
+  IP:  172.17.0.6
+Containers:
+  busybox:
+    Container ID:  containerd://933edbd241eec1f5e23e9cf9d0980f549f82bb9152ced4fbc8c607d7dcd0ebd2
+    Image:         busybox
+    Image ID:      docker.io/library/busybox@sha256:fd8d9aa63ba2f0982b5304e1ee8d3b90a210bc1ffb5314d980eb6962f1a9715d
+    Port:          <none>
+    Host Port:     <none>
+    Command:
+      sh
+      -c
+      echo I am running as user $(id -u)
+    State:          Terminated
+      Reason:       Completed
+      Exit Code:    0
+      Started:      Thu, 28 May 2026 15:15:03 +0000
+      Finished:     Thu, 28 May 2026 15:15:03 +0000
+    Ready:          False
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-k5xvn (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   False 
+  Initialized                 True 
+  Ready                       False 
+  ContainersReady             False 
+  PodScheduled                True 
+Volumes:
+  kube-api-access-k5xvn:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  19s   default-scheduler  Successfully assigned default/pod-with-defaults to controlplane
+  Normal  Pulling    19s   kubelet            spec.containers{busybox}: Pulling image "busybox"
+  Normal  Pulled     18s   kubelet            spec.containers{busybox}: Successfully pulled image "busybox" in 537ms (537ms including waiting). Image size: 2236931 bytes.
+  Normal  Created    18s   kubelet            spec.containers{busybox}: Container created
+  Normal  Started    18s   kubelet            spec.containers{busybox}: Container started
+
+controlplane ~ ➜  k get po pod-with-defaults -oyaml 
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2026-05-28T15:15:02Z"
+  generation: 1
+  labels:
+    app: pod-with-defaults
+  name: pod-with-defaults
+  namespace: default
+  resourceVersion: "1863"
+  uid: 01add240-a4d9-4898-832d-2c979306dc35
+spec:
+  containers:
+  - command:
+    - sh
+    - -c
+    - echo I am running as user $(id -u)
+    image: busybox
+    imagePullPolicy: Always
+    name: busybox
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-k5xvn
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  nodeName: controlplane
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: OnFailure
+  schedulerName: default-scheduler
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1234
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+  volumes:
+  - name: kube-api-access-k5xvn
+    projected:
+      defaultMode: 420
+      sources:
+      - serviceAccountToken:
+          expirationSeconds: 3607
+          path: token
+      - configMap:
+          items:
+          - key: ca.crt
+            path: ca.crt
+          name: kube-root-ca.crt
+      - downwardAPI:
+          items:
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+            path: namespace
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2026-05-28T15:15:05Z"
+    observedGeneration: 1
+    status: "False"
+    type: PodReadyToStartContainers
+  - lastProbeTime: null
+    lastTransitionTime: "2026-05-28T15:15:02Z"
+    observedGeneration: 1
+    reason: PodCompleted
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2026-05-28T15:15:02Z"
+    observedGeneration: 1
+    reason: PodCompleted
+    status: "False"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2026-05-28T15:15:02Z"
+    observedGeneration: 1
+    reason: PodCompleted
+    status: "False"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2026-05-28T15:15:02Z"
+    observedGeneration: 1
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - containerID: containerd://933edbd241eec1f5e23e9cf9d0980f549f82bb9152ced4fbc8c607d7dcd0ebd2
+    image: docker.io/library/busybox:latest
+    imageID: docker.io/library/busybox@sha256:fd8d9aa63ba2f0982b5304e1ee8d3b90a210bc1ffb5314d980eb6962f1a9715d
+    lastState: {}
+    name: busybox
+    ready: false
+    resources: {}
+    restartCount: 0
+    started: false
+    state:
+      terminated:
+        containerID: containerd://933edbd241eec1f5e23e9cf9d0980f549f82bb9152ced4fbc8c607d7dcd0ebd2
+        exitCode: 0
+        finishedAt: "2026-05-28T15:15:03Z"
+        reason: Completed
+        startedAt: "2026-05-28T15:15:03Z"
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-k5xvn
+      readOnly: true
+      recursiveReadOnly: Disabled
+  hostIP: 10.244.167.78
+  hostIPs:
+  - ip: 10.244.167.78
+  observedGeneration: 1
+  phase: Succeeded
+  podIP: 172.17.0.6
+  podIPs:
+  - ip: 172.17.0.6
+  qosClass: BestEffort
+  startTime: "2026-05-28T15:15:02Z"
+
+controlplane ~ ➜  #12
+
+controlplane ~ ➜  cat /root/pod-with-override.yaml
+# A pod with a securityContext explicitly allowing it to run as root.
+# The effect of deploying this with and without the webhook is the same. The
+# explicit setting however prevents the webhook from applying more secure
+# defaults.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-with-override
+  labels:
+    app: pod-with-override
+spec:
+  restartPolicy: OnFailure
+  securityContext:
+    runAsNonRoot: false
+  containers:
+    - name: busybox
+      image: busybox
+      command: ["sh", "-c", "echo I am running as user $(id -u)"]
+
+controlplane ~ ➜  k create -f /root/pod-with-override.yaml
+pod/pod-with-override created
+
+controlplane ~ ➜  k get pod pod-with-override -oyaml
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2026-05-28T15:18:16Z"
+  generation: 1
+  labels:
+    app: pod-with-override
+  name: pod-with-override
+  namespace: default
+  resourceVersion: "2125"
+  uid: da6b2e7e-3331-4276-8990-1601a099ad87
+spec:
+  containers:
+  - command:
+    - sh
+    - -c
+    - echo I am running as user $(id -u)
+    image: busybox
+    imagePullPolicy: Always
+    name: busybox
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-kj6tr
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  nodeName: controlplane
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: OnFailure
+  schedulerName: default-scheduler
+  securityContext:
+    runAsNonRoot: false
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+  volumes:
+  - name: kube-api-access-kj6tr
+    projected:
+      defaultMode: 420
+      sources:
+      - serviceAccountToken:
+          expirationSeconds: 3607
+          path: token
+      - configMap:
+          items:
+          - key: ca.crt
+            path: ca.crt
+          name: kube-root-ca.crt
+      - downwardAPI:
+          items:
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+            path: namespace
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2026-05-28T15:18:18Z"
+    observedGeneration: 1
+    status: "False"
+    type: PodReadyToStartContainers
+  - lastProbeTime: null
+    lastTransitionTime: "2026-05-28T15:18:16Z"
+    observedGeneration: 1
+    reason: PodCompleted
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2026-05-28T15:18:16Z"
+    observedGeneration: 1
+    reason: PodCompleted
+    status: "False"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2026-05-28T15:18:16Z"
+    observedGeneration: 1
+    reason: PodCompleted
+    status: "False"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2026-05-28T15:18:16Z"
+    observedGeneration: 1
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - containerID: containerd://c97d8252612c5623a6fc5fafeffb06e414e2bb21e0b5848406ef5dc5d2d95226
+    image: docker.io/library/busybox:latest
+    imageID: docker.io/library/busybox@sha256:fd8d9aa63ba2f0982b5304e1ee8d3b90a210bc1ffb5314d980eb6962f1a9715d
+    lastState: {}
+    name: busybox
+    ready: false
+    resources: {}
+    restartCount: 0
+    started: false
+    state:
+      terminated:
+        containerID: containerd://c97d8252612c5623a6fc5fafeffb06e414e2bb21e0b5848406ef5dc5d2d95226
+        exitCode: 0
+        finishedAt: "2026-05-28T15:18:17Z"
+        reason: Completed
+        startedAt: "2026-05-28T15:18:17Z"
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-kj6tr
+      readOnly: true
+      recursiveReadOnly: Disabled
+  hostIP: 10.244.167.78
+  hostIPs:
+  - ip: 10.244.167.78
+  observedGeneration: 1
+  phase: Succeeded
+  podIP: 172.17.0.7
+  podIPs:
+  - ip: 172.17.0.7
+  qosClass: BestEffort
+  startTime: "2026-05-28T15:18:16Z"
+
+controlplane ~ ➜  cat /root/pod-with-conflict.yaml
+# A pod with a conflicting securityContext setting: it has to run as a non-root
+# user, but we explicitly request a user id of 0 (root).
+# Without the webhook, the pod could be created, but would be unable to launch
+# due to an unenforceable security context leading to it being stuck in a
+# 'CreateContainerConfigError' status. With the webhook, the creation of
+# the pod is outright rejected.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-with-conflict
+  labels:
+    app: pod-with-conflict
+spec:
+  restartPolicy: OnFailure
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 0
+  containers:
+    - name: busybox
+      image: busybox
+      command: ["sh", "-c", "echo I am running as user $(id -u)"]
+
+controlplane ~ ➜  k create -f /root/pod-with-conflict.yaml
+Error from server: error when creating "/root/pod-with-conflict.yaml": admission webhook "webhook-server.webhook-demo.svc" denied the request: runAsNonRoot specified, but runAsUser set to 0 (the root user)
+
+controlplane ~ ✖ history
+    1  #1-3
+    2  k create ns webhook-demo
+    3  #4
+    4  k create secret --help
+    5  k create secret tls --help
+    6  k create secret tls --cert='/root/keys/webhook-server-tls.crt' --key='/root/keys/webhook-server-tls.key'
+    7  k create secret tls webhook-server-tls --cert='/root/keys/webhook-server-tls.crt' --key='/root/keys/webhook-server-tls.key'
+    8  #5
+    9  #4
+   10  k create secret tls webhook-server-tls --cert='/root/keys/webhook-server-tls.crt' --key='/root/keys/webhook-server-tls.key' -n webhook-demo
+   11  #5
+   12  k create -f /root/webhook-deployment.yaml
+   13  vi /root/webhook-deployment.yaml
+   14  #6
+   15  k create -f /root/webhook-service.yaml
+   16  vi /root/webhook-service.yaml
+   17  cat /root/webhook-service.yaml
+   18  cat /root/webhook-deployment.yaml
+   19  #7
+   20  cat /root/webhook-configuration.yaml
+   21  k create -f /root/webhook-configuration.yaml
+   22  #8
+   23  #9
+   24  cat /root/pod-with-defaults.yaml
+   25  k create -f /root/pod-with-defaults.yaml
+   26  #10
+   27  #11
+   28  k describe pod pod-with-defaults 
+   29  k get po pod-with-defaults -oyaml 
+   30  #12
+   31  cat /root/pod-with-override.yaml
+   32  k create -f /root/pod-with-override.yaml
+   33  k get pod pod-with-override -oyaml
+   34  cat /root/pod-with-conflict.yaml
+   35  k create -f /root/pod-with-conflict.yaml
+   36  history
+```
 ## 6.4 Admission Controller
 ```cmd
           Welcome to the KodeKloud Hands-On lab                                                                                                               

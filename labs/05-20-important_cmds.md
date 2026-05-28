@@ -1,4 +1,8 @@
 #  Lab 6
+# 6.5  Validating and Mutating Admission Controllers
+```cmd
+k get pod pod-with-override -oyaml
+```
 ## 6.2 Static Pod
 ## Practice Test - Static Pods
 ```
