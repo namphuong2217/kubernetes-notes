@@ -1,3 +1,15 @@
+# Lab 8
+
+CHange-cause 
+--record
+annotation/...
+# Lab 7
+```cmd
+k top pod -l key=value --sort-by=cpu/memory
+kubectl get pod <pod-name> -o jsonpath='{.status.containerStatuses[*].containerID}'
+kubectl get pods -l app=nginx \
+  -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.containerStatuses[*].containerID}{"\n"}{end}'
+```
 #  Lab 6
 # 6.5  Validating and Mutating Admission Controllers
 ```cmd

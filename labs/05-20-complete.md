@@ -1,3 +1,453 @@
+# Lab 8 
+# COnfigmap
+```cmd
+              
+    __ ______  ____  ________ __ __    ____  __  ______ 
+   / //_/ __ \/ __ \/ ____/ //_// /   / __ \/ / / / __ \
+  / ,< / / / / / / / __/ / ,<  / /   / / / / / / / / / /
+ / /| / /_/ / /_/ / /___/ /| |/ /___/ /_/ / /_/ / /_/ / 
+/_/ |_\____/_____/_____/_/ |_/_____/\____/\____/_____/  
+                                                        
+                 All rights reserved                                                                                                                                  
+
+controlplane ~ ➜  #1
+
+controlplane ~ ➜  k get po
+NAME           READY   STATUS    RESTARTS   AGE
+webapp-color   1/1     Running   0          3m57s
+
+controlplane ~ ➜  k get po -n default
+NAME           READY   STATUS    RESTARTS   AGE
+webapp-color   1/1     Running   0          4m1s
+
+controlplane ~ ➜  #2
+
+controlplane ~ ➜  k describe po webapp-color 
+Name:             webapp-color
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             controlplane/10.244.135.209
+Start Time:       Wed, 03 Jun 2026 11:49:45 +0000
+Labels:           name=webapp-color
+Annotations:      <none>
+Status:           Running
+IP:               10.22.0.9
+IPs:
+  IP:  10.22.0.9
+Containers:
+  webapp-color:
+    Container ID:   containerd://02f63e0972aaf99428619840668f9268b09ba5631331723b32c5039b86d4128e
+    Image:          kodekloud/webapp-color
+    Image ID:       docker.io/kodekloud/webapp-color@sha256:99c3821ea49b89c7a22d3eebab5c2e1ec651452e7675af243485034a72eb1423
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Wed, 03 Jun 2026 11:49:56 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:
+      APP_COLOR:  pink
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-q25c5 (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True 
+  Initialized                 True 
+  Ready                       True 
+  ContainersReady             True 
+  PodScheduled                True 
+Volumes:
+  kube-api-access-q25c5:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age    From               Message
+  ----    ------     ----   ----               -------
+  Normal  Scheduled  4m15s  default-scheduler  Successfully assigned default/webapp-color to controlplane
+  Normal  Pulling    4m15s  kubelet            spec.containers{webapp-color}: Pulling image "kodekloud/webapp-color"
+  Normal  Pulled     4m5s   kubelet            spec.containers{webapp-color}: Successfully pulled image "kodekloud/webapp-color" in 10.027s (10.027s including waiting). Image size: 31777918 bytes.
+  Normal  Created    4m5s   kubelet            spec.containers{webapp-color}: Container created
+  Normal  Started    4m5s   kubelet            spec.containers{webapp-color}: Container started
+
+controlplane ~ ➜  k describe po webapp-color | grep -i env
+    Environment:
+
+controlplane ~ ➜  k describe po webapp-color | grep -i env -N5
+grep: unrecognized option: N
+BusyBox v1.35.0 (2022-08-01 15:14:44 UTC) multi-call binary.
+
+Usage: grep [-HhnlLoqvsrRiwFE] [-m N] [-A|B|C N] { PATTERN | -e PATTERN... | -f FILE... } [FILE]...
+
+Search for PATTERN in FILEs (or stdin)
+
+        -H      Add 'filename:' prefix
+        -h      Do not add 'filename:' prefix
+        -n      Add 'line_no:' prefix
+        -l      Show only names of files that match
+        -L      Show only names of files that don't match
+        -c      Show only count of matching lines
+        -o      Show only the matching part of line
+        -q      Quiet. Return 0 if PATTERN is found, 1 otherwise
+        -v      Select non-matching lines
+        -s      Suppress open and read errors
+        -r      Recurse
+        -R      Recurse and dereference symlinks
+        -i      Ignore case
+        -w      Match whole words only
+        -x      Match whole lines only
+        -F      PATTERN is a literal (not regexp)
+        -E      PATTERN is an extended regexp
+        -m N    Match up to N times per file
+        -A N    Print N lines of trailing context
+        -B N    Print N lines of leading context
+        -C N    Same as '-A N -B N'
+        -e PTRN Pattern to match
+        -f FILE Read pattern from file
+
+controlplane ~ ✖ k describe po webapp-color | grep -i env -C5
+    Host Port:      <none>
+    State:          Running
+      Started:      Wed, 03 Jun 2026 11:49:56 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:
+      APP_COLOR:  pink
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-q25c5 (ro)
+Conditions:
+  Type                        Status
+
+controlplane ~ ➜  #3
+
+controlplane ~ ➜  #4
+
+controlplane ~ ➜  #5
+
+controlplane ~ ➜  k edit po webapp-color 
+Error detected while processing /root/.vimrc:
+line    2:
+E117: Unknown function: pathogen#infect
+line    4:
+E185: Cannot find color scheme 'dracula'
+Press ENTER or type command to continue
+error: pods "webapp-color" is invalid
+Error detected while processing /root/.vimrc:
+line    2:
+E117: Unknown function: pathogen#infect
+line    4:
+E185: Cannot find color scheme 'dracula'
+Press ENTER or type command to continue
+A copy of your changes has been stored to "/tmp/kubectl-edit-1952791348.yaml"
+error: Edit cancelled, no valid changes were saved.
+
+controlplane ~ ✖ k replace --force -f /tmp/kubectl-edit-1952791348.yaml
+pod "webapp-color" deleted from default namespace
+pod/webapp-color replaced
+
+controlplane ~ ➜  #6
+
+controlplane ~ ➜  #7
+
+controlplane ~ ➜  k get configmaps -n default
+NAME               DATA   AGE
+db-config          3      18s
+kube-root-ca.crt   1      15m
+
+controlplane ~ ➜  k get configmaps -n default -o wide
+NAME               DATA   AGE
+db-config          3      26s
+kube-root-ca.crt   1      15m
+
+controlplane ~ ➜  #8
+
+controlplane ~ ➜  k get configmaps db-config 
+NAME        DATA   AGE
+db-config   3      49s
+
+controlplane ~ ➜  k describe configmaps db-config 
+Name:         db-config
+Namespace:    default
+Labels:       <none>
+Annotations:  <none>
+
+Data
+====
+DB_HOST:
+----
+SQL01.example.com
+
+DB_NAME:
+----
+SQL01
+
+DB_PORT:
+----
+3306
+
+
+BinaryData
+====
+
+Events:  <none>
+
+controlplane ~ ➜  k api-resources | grep -i configmap -C5
+NAME                                SHORTNAMES   APIVERSION                          NAMESPACED   KIND
+bindings                                         v1                                  true         Binding
+componentstatuses                   cs           v1                                  false        ComponentStatus
+configmaps                          cm           v1                                  true         ConfigMap
+endpoints                           ep           v1                                  true         Endpoints
+events                              ev           v1                                  true         Event
+limitranges                         limits       v1                                  true         LimitRange
+namespaces                          ns           v1                                  false        Namespace
+nodes                               no           v1                                  false        Node
+
+controlplane ~ ➜  #9
+
+controlplane ~ ➜  k create configmap webapp-config-map --from-literal=APP_COLOR=darkblue --from-literal=APP_OTHER=disregard
+configmap/webapp-config-map created
+
+controlplane ~ ➜  #10
+
+controlplane ~ ➜  k edit pod webapp-color 
+Error detected while processing /root/.vimrc:
+line    2:
+E117: Unknown function: pathogen#infect
+line    4:
+E185: Cannot find color scheme 'dracula'
+Press ENTER or type command to continue
+error: pods "webapp-color" is invalid
+Error detected while processing /root/.vimrc:
+line    2:
+E117: Unknown function: pathogen#infect
+line    4:
+E185: Cannot find color scheme 'dracula'
+Press ENTER or type command to continue
+error: pods "webapp-color" is invalid
+Error detected while processing /root/.vimrc:
+line    2:
+E117: Unknown function: pathogen#infect
+line    4:
+E185: Cannot find color scheme 'dracula'
+Press ENTER or type command to continue
+A copy of your changes has been stored to "/tmp/kubectl-edit-76221615.yaml"
+error: Edit cancelled, no valid changes were saved.
+
+controlplane ~ ✖ k delete po webapp-color 
+pod "webapp-color" deleted from default namespace
+
+controlplane ~ ➜  k create -f /tmp/kubectl-edit-76221615.yaml
+pod/webapp-color created
+
+controlplane ~ ➜  #11
+
+controlplane ~ ➜  history
+    1  #1
+    2  k get po
+    3  k get po -n default
+    4  #2
+    5  k describe po webapp-color 
+    6  k describe po webapp-color | grep -i env
+    7  k describe po webapp-color | grep -i env -N5
+    8  k describe po webapp-color | grep -i env -C5
+    9  #3
+   10  #4
+   11  #5
+   12  k edit po webapp-color 
+   13  k replace --force -f /tmp/kubectl-edit-1952791348.yaml
+   14  #6
+   15  #7
+   16  k get configmaps -n default
+   17  k get configmaps -n default -o wide
+   18  #8
+   19  k get configmaps db-config 
+   20  k describe configmaps db-config 
+   21  k api-resources | grep -i configmap -C5
+   22  #9
+   23  k create configmap webapp-config-map --from-literal=APP_COLOR=darkblue --from-literal=APP_OTHER=disregard
+   24  #10
+   25  k edit pod webapp-color 
+   26  k delete po webapp-color 
+   27  k create -f /tmp/kubectl-edit-76221615.yaml
+   28  #11
+   29  history
+
+```
+
+# Lab 7
+## 7.1 Monitor Cluster Components
+```cmd
+        Welcome to the KodeKloud Hands-On lab                                                                                      
+    __ ______  ____  ________ __ __    ____  __  ______ 
+   / //_/ __ \/ __ \/ ____/ //_// /   / __ \/ / / / __ \
+  / ,< / / / / / / / __/ / ,<  / /   / / / / / / / / / /
+ / /| / /_/ / /_/ / /___/ /| |/ /___/ /_/ / /_/ / /_/ / 
+/_/ |_\____/_____/_____/_/ |_/_____/\____/\____/_____/  
+                                                        
+              All rights reserved                                                                                                  
+
+controlplane ~ ➜  k get pods
+NAME       READY   STATUS    RESTARTS   AGE
+elephant   1/1     Running   0          8s
+lion       1/1     Running   0          9s
+rabbit     1/1     Running   0          8s
+
+controlplane ~ ➜  #1
+
+controlplane ~ ➜  #2
+
+controlplane ~ ➜  k get pods
+NAME       READY   STATUS    RESTARTS   AGE
+elephant   1/1     Running   0          31s
+lion       1/1     Running   0          32s
+rabbit     1/1     Running   0          31s
+
+controlplane ~ ➜  #3
+
+controlplane ~ ➜   kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+serviceaccount/metrics-server created
+clusterrole.rbac.authorization.k8s.io/system:aggregated-metrics-reader created
+clusterrole.rbac.authorization.k8s.io/system:metrics-server created
+rolebinding.rbac.authorization.k8s.io/metrics-server-auth-reader created
+clusterrolebinding.rbac.authorization.k8s.io/metrics-server:system:auth-delegator created
+clusterrolebinding.rbac.authorization.k8s.io/system:metrics-server created
+service/metrics-server created
+deployment.apps/metrics-server created
+apiservice.apiregistration.k8s.io/v1beta1.metrics.k8s.io created
+
+controlplane ~ ➜  #4
+
+controlplane ~ ➜  kubectl top node
+NAME           CPU(cores)   CPU(%)   MEMORY(bytes)   MEMORY(%)   
+controlplane   172m         1%       914Mi           1%          
+node01         22m          0%       159Mi           0%          
+
+controlplane ~ ➜  #5
+
+controlplane ~ ➜  kubectl top node --help
+Display resource (CPU/memory) usage of nodes.
+
+ The top-node command allows you to see the resource consumption of nodes.
+
+Aliases:
+node, nodes, no
+
+Examples:
+  # Show metrics for all nodes
+  kubectl top node
+  
+  # Show metrics for a given node
+  kubectl top node NODE_NAME
+
+Options:
+    --no-headers=false:
+        If present, print output without headers
+
+    -l, --selector='':
+        Selector (label query) to filter on, supports '=', '==', '!=', 'in', 'notin'.(e.g. -l
+        key1=value1,key2=value2,key3 in (value3)). Matching objects must satisfy all of the
+        specified label constraints.
+
+    --show-capacity=false:
+        Print node resources based on Capacity instead of Allocatable(default) of the nodes.
+
+    --show-swap=false:
+        Print node resources related to swap memory.
+
+    --sort-by='':
+        If non-empty, sort nodes list using specified field. The field can be either 'cpu' or
+        'memory'.
+
+    --use-protocol-buffers=true:
+        Enables using protocol-buffers to access Metrics API.
+
+Usage:
+  kubectl top node [NAME | -l label] [options]
+
+Use "kubectl options" for a list of global command-line options (applies to all commands).
+
+controlplane ~ ➜  kubectl top node --sort-by='cpu'
+NAME           CPU(cores)   CPU(%)   MEMORY(bytes)   MEMORY(%)   
+controlplane   179m         1%       721Mi           1%          
+node01         21m          0%       159Mi           0%          
+
+controlplane ~ ➜  kubectl top node --sort-by='memory'
+NAME           CPU(cores)   CPU(%)   MEMORY(bytes)   MEMORY(%)   
+controlplane   188m         1%       916Mi           1%          
+node01         22m          0%       161Mi           0%          
+
+controlplane ~ ➜  kubectl top node -n default --sort-by='memory'
+NAME           CPU(cores)   CPU(%)   MEMORY(bytes)   MEMORY(%)   
+controlplane   178m         1%       916Mi           1%          
+node01         22m          0%       161Mi           0%          
+
+controlplane ~ ➜  kubectl top pod -n default --sort-by='memory'
+NAME       CPU(cores)   MEMORY(bytes)   
+rabbit     98m          250Mi           
+elephant   13m          30Mi            
+lion       1m           16Mi            
+
+controlplane ~ ➜  #7
+
+controlplane ~ ➜  #6
+
+controlplane ~ ➜  #8
+
+controlplane ~ ➜  kubectl top pod -n default --sort-by='cpu'
+NAME       CPU(cores)   MEMORY(bytes)   
+rabbit     108m         250Mi           
+elephant   13m          30Mi            
+lion       1m           16Mi            
+
+controlplane ~ ➜  history
+    1  k get pods
+    2  #1
+    3  #2
+    4  k get pods
+    5  #3
+    6  #4
+    7  kubectl top node
+    8  #5
+    9  kubectl top node --help
+   10  kubectl top node --sort-by='cpu'
+   11  kubectl top node --sort-by='memory'
+   12  kubectl top node -n default --sort-by='memory'
+   13  kubectl top pod -n default --sort-by='memory'
+   14  #7
+   15  #6
+   16  #8
+   17  kubectl top pod -n default --sort-by='cpu'
+   18  history
+
+```
+## 7.2 Managing Application Logs
+```cmd
+controlplane ~ ➜  history
+    1  #1
+    2  k get pod
+    3  #2
+    4  k logs webapp-1 | grep -i "USer5" -a20
+    5  k logs webapp-1 | grep -i --help
+    6  k logs webapp-1 | grep -i user5 -C 10
+    7  k logs webapp-1 | grep -i -w user5 -C 10
+    8  k logs webapp-1 | grep -i -w user5 
+    9  #3
+   10  k get pod webapp-2
+   11  k logs webapp-1 | grep -i --help
+   12  k logs --help
+   13  k get pod
+   14  kubectl get pod webapp-2 -o jsonpath='{.spec.containers[*].name}'
+   15  kubectl get pod webapp-2 -oyaml
+   16  k logs webapp-2 -c simple-webapp
+   17  history
+```
 # Lab 6 
 ## 6.5 Validating and Mutating Admission Controllers
 ```cmd
