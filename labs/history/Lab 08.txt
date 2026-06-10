@@ -1,0 +1,284 @@
+# Rolling Updates and Rollbacks
+controlplane ~ ➜  history
+    1  #1
+    2  k get pod
+    3  k get svc
+    4  #1
+    5  ls
+    6  bash /root/curl-test.sh
+    7  #2,3
+    8  #4
+    9  k get deploy
+   10  k describe deploy frontend
+   11  #5
+   12  #6
+   13  #7
+   14  #8
+   15  k edit deploy frontend --image=kodekloud/webapp-color:v2
+   16  k edit deploy frontend --help
+   17  k edit deploy frontend
+   18  k describe deploy frontend 
+   19  #9
+   20  bash /root/curl-test.sh
+   21  #10
+   22  #11
+   23  k edit deploy frontend
+   24  #12
+   25  k edit deploy frontend
+   26  #13
+   27  bash /root/curl-test.sh
+   28  history
+   
+# Commands and Arguments
+controlplane ~/webapp-color-3 ➜  history
+    1  #1
+    2  k get pod
+    3  #2
+    4  k describe pod ubuntu-sleeper 
+    5  #3
+    6  ls
+    7  vi ubuntu-sleeper-2.yaml 
+    8  k create -f ubuntu-sleeper-2.yaml
+    9  #4
+   10  k create -f ubuntu-sleeper-3.yaml
+   11  vi ubuntu-sleeper-3.yaml 
+   12  k create -f ubuntu-sleeper-3.yaml
+   13  #5
+   14  vi ubuntu-sleeper-3.yaml 
+   15  k apply -f ubuntu-sleeper-3.yaml
+   16  k edit pod ubuntu-sleeper-3 
+   17  k replace --force -f /tmp/kubectl-edit-3318710568.yaml
+   18  #6
+   19  cat /root/webapp-color
+   20  cat /root/webapp-color/Dockerfile
+   21  #7
+   22  cat /root/webapp-color/Dockerfile2
+   23  #8
+   24  cat webapp-color-pod.yaml
+   25  ls
+   26  ls webapp-color-2
+   27  cat webapp-color-2/webapp-color-pod.yaml 
+   28  cat webapp-color-2/Dockerfile 
+   29  #9
+   30  cat webapp-color-3/webapp-color-pod-2.yaml 
+   31  cat webapp-color-3/Dockerfile 
+   32  #10
+   33  ls
+   34  cd webapp-color-3
+   35  ls
+   36  vi webapp-color-pod-2.yaml 
+   37  k create -f webapp-color-pod-2.yaml 
+   38  history
+
+# Configmap
+controlplane ~ ➜  history
+    1  #1
+    2  k get po
+    3  k get po -n default
+    4  #2
+    5  k describe po webapp-color 
+    6  k describe po webapp-color | grep -i env
+    7  k describe po webapp-color | grep -i env -N5
+    8  k describe po webapp-color | grep -i env -C5
+    9  #3
+   10  #4
+   11  #5
+   12  k edit po webapp-color 
+   13  k replace --force -f /tmp/kubectl-edit-1952791348.yaml
+   14  #6
+   15  #7
+   16  k get configmaps -n default
+   17  k get configmaps -n default -o wide
+   18  #8
+   19  k get configmaps db-config 
+   20  k describe configmaps db-config 
+   21  k api-resources | grep -i configmap -C5
+   22  #9
+   23  k create configmap webapp-config-map --from-literal=APP_COLOR=darkblue --from-literal=APP_OTHER=disregard
+   24  #10
+   25  k edit pod webapp-color 
+   26  k delete po webapp-color 
+   27  k create -f /tmp/kubectl-edit-76221615.yaml
+   28  #11
+   29  history
+   
+# Secret
+controlplane ~ ➜  history
+    1  history
+    2  #1 
+    3  k get secrets
+    4  #2
+    5  k describe secrets dashboard-token
+    6  #3
+    7  #4
+    8  #5
+    9  k get deployments.apps 
+   10  k get deployments.apps
+   11  k get deploy
+   12  k get pods
+   13  k get svc
+   14  k get secret
+   15  #6
+   16  k create secret --help
+   17  kubectl create secret <command> --help
+   18  kubectl create secret generic --help
+   19  k create secret generic db-scret --from-literal=DB_Host=sql01 --from-literal=DB_User=root --from-literal=DB_Password=password123
+   20  k get secrets db-scret 
+   21  k create secret generic db-secret --from-literal=DB_Host=sql01 --from-literal=DB_User=root --from-literal=DB_Password=password123
+   22  k describe secrets db-secret 
+   23  k get secrets db-secret -oyaml
+   24  #7
+   25  k edit pod webapp-pod 
+   26  k replace --force -f /tmp/kubectl-edit-2077305154.yaml
+   27  k describe pod webapp-pod | grep -i "envFrom" -C5
+   28  k get pod webapp-pod -oyaml | grep -i "envFrom" -C5
+   29  #8
+   30  history
+   
+# Multi-containers Pod
+ontrolplane ~ ➜  history
+    1  #1
+    2  k get pod red -o wide
+    3  #2
+    4  k describe pod blue
+    5  #3
+    6  ls
+    7  k get pod blue -oyaml > q3.yaml
+    8  vi q3.yaml 
+    9  k create -f q3.yaml 
+   10  k run yellow --image=busybox --dry-run=client -oyaml > q31.yaml
+   11  vi q31.yaml 
+   12  #4
+   13  k get pod -n elastic-stack 
+   14  #5
+   15  kubectl -n elastic-stack logs kibana
+   16  #6
+   17  k get -n elastic-stack pod app 
+   18  #7
+   19  ls
+   20  k exec --help
+   21  k exec app -- cat /log/app.log
+   22  k exec --help
+   23  kubectl -n elastic-stack exec -it app -- cat /log/app.log
+   24  kubectl -n elastic-stack exec -it app -- sh -c "cat /log/app.log | grep -i 'warning\|error'"
+   25  kubectl -n elastic-stack exec app -- grep -i 'login' /log/app.log | grep -i 'fail'
+   26  kubectl -n elastic-stack exec -it app -- grep -i 'failed' /log/app.log
+   27  #8
+   28  clr
+   29  clear
+   30  k edit pod app 
+   31  k replace --force -f /tmp/kubectl-edit-2006853867.yaml
+   32  k get pod app -oyaml
+   33  k edit pod app 
+   34  k replace --force -f /tmp/kubectl-edit-4012914935.yaml
+   35  k edit pod app 
+   36  k get -n elastic-stack pod
+   37  k get -n default pod
+   38  k replace --force -f /tmp/kubectl-edit-4012914935.yaml -n elastic-stack 
+   39  k delete pod -n elastic-stack app
+   40  k create -n elastic-stack -f /tmp/kubectl-edit-4012914935.yaml
+   41  k edit app
+   42  k edit pod app
+   43  k create -n elastic-stack -f /tmp/kubectl-edit-6847627.yaml
+   44  #9
+   45  history
+
+# Init Containers
+controlplane ~ ➜  history
+    1  #1
+    2  k get pod
+    3  k describe pod blue | grep -i "initContainer" -C3
+    4  k describe pod green | grep -i "initContainer" -C3
+    5  k describe pod red | grep -i "initContainer" -C3
+    6  k describe pod blue
+    7  #2
+    8  #3
+    9  #4
+   10  k describe pod purple
+   11  #6
+   12  #7
+   13  #8
+   14  k get pod red -oyaml > q8.yaml
+   15  vi q8.yaml 
+   16  k apply -f q8.yaml 
+   17  k delete pod red
+   18  k apply -f q8.yaml 
+   19  k get pod
+   20  k describe pod red
+   21  vi q8.yaml 
+   22  k replace -f q8.yaml --force
+   23  k get pod
+   24  k describe pod red
+   25  #9
+   26  k describe pod red
+   27  k get pod
+   28  k describe pod orange 
+   29  k logs orange 
+   30  k logs orange -c init-myservice
+   31  k edit orange
+   32  k edit pod orange
+   33  k replace --force- f /tmp/kubectl-edit-2266287673.yaml
+   34  k replace --force -f /tmp/kubectl-edit-2266287673.yaml
+   35  history
+ 
+# Manual Scaling
+controlplane ~ ➜  history
+    1  #1
+    2  #2
+    3  k create -f  /root/deployment.yml
+    4  k get deploy
+    5  k get pod
+    6  k get deploy
+    7  #3
+    8  #4
+    9  #5
+   10  k scale deploy flask-web-app --help
+   11  k scale deploy/flask-web-app --replicas=3
+   12  #6
+   13  history
+   
+# HPA
+controlplane ~ ➜  history
+    1  #1
+    2  #2
+    3  k create -f /root/deployment.yml 
+    4  k get deploy
+    5  k get deploy -w
+    6  #3
+    7  cat /root/autoscale.yml
+    8  #4
+    9  k create -f /root/autoscale.yml
+   10  kubectl autoscale deployment nginx-deployment --max=3 --cpu=80%
+   11  #5
+   12  #6
+   13  #7
+   14  k get deploy
+   15  #8
+   16  k get horizontalpodautoscalers nginx-deployment 
+   17  k get hpa
+   18  k describe hpa nginx-deployment 
+   19  k describe deploy nginx-deployment 
+   20  cat /root/deployment.yml 
+   21  k apply -f /root/deployment.yml 
+   
+
+   22  k replace --force -f /root/deployment.yml 
+   23  #11
+   24  k describe hpa nginx-deployment 
+   25  k describe hpa nginx-deployment | grep -i "ScalingReplicaSet"
+   26  k describe hpa nginx-deployment | grep -i "ScalingReplicaSet" -C3
+   27  k get hpa -owide
+   28  k get hpa nginx-deployment -o wide
+   29  k get hpa -oyaml
+   30  k describe hpa nginx-deployment 
+   31  #12
+   32  history
+   
+# Modifying CPU resources in VPA
+controlplane ~ ➜  history
+    1  k describe vpa flask-app 
+    2  echo "100m" > /root/target
+    3  k describe vpa flask-app 
+    4  echo "476m" > /root/target
+    5  history
+   

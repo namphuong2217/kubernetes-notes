@@ -1,3 +1,9 @@
+# Lab 9
+```cmd
+# Monitor container status
+systemctl restart kubelet
+crictl ps -a
+```
 # Lab 8
 
 CHange-cause 
