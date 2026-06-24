@@ -5,6 +5,8 @@ kubectl explain deployments.spec.selector
 kubectl explain deployments.spec.selector --recursive
 #1
 
+k explain netpol.spec
+
 kubectl run nginx --image=nginx --port=8080 --dry-run=client -o yaml # Ko chay that
 cat q1.yaml
 
