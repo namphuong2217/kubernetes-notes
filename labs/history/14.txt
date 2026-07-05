@@ -1,0 +1,85 @@
+# Explore Environment
+controlplane ~ ➜  history
+    1  #1
+    2  k get nodes -A
+    3  #2
+    4  k get nodes -A -o wide
+    5  #3
+    6  ip address | grep -i "controlplane"
+    7  ip address
+    8  ip address | grep -i "10.244.213.35" -C3
+    9  #4
+   10  #5
+   11  #6
+   12  ip address | grep -i "213.63" -C3
+   13  k get nodes
+   14  k get nodes -o wide
+   15  ssh node01
+   16  ip link
+   17  #8
+   18  #9
+   19  ip route
+   20  ip route show default
+   21* # 9 What is the IP address of the Default Gatewa
+   22  #10
+   23  #11
+   24  ip address show type bridge
+   25  #12 Correct! That's because 2379 is the port of ETCD to which all control plane components connect to. 2380 is only for etcd peer-to-peer connectivity. When you have multiple controlplane nodes. In this case we don't
+   26  history
+#  Explore CNI
+controlplane ~ ➜  history
+    1  #1
+    2  k get svc -A
+    3  cat /var/lib/kubelet/config.yaml 
+    4  #2
+    5  # What is the path configured with all binaries of CNI supported plugins? /opt/cni/bin
+    6  #3
+    7  ls /opt/cni/bin
+    8  #4
+    9  # What is the CNI plugin configured to be used on this kubernetes cluster?
+   10  ls /etc/cni/net.d/
+   11  #5 What binary executable file will be invoked by the container runtime after a container and its associated namespace are created?
+   12  cat /etc/cni/net.d/10-flannel.conflist 
+   13  history
+
+# Networking CNIs
+controlplane ~ ✖ history
+    1  #1 Welcome to the Kubernetes CNI Lab. In this lab, we are going to explore various Kubernetes CNIs and some differences between them.
+    2  Let's explore the current setup. Which CNI plugin is currently installed on the cluster?
+
+    3  history
+    4  k get pods -A
+    5  ls /etc/cni/net.d/
+    6  cat /etc/cni/net.d/10-flannel.conflist 
+    7  #2
+    8  k get pods -owide
+    9  k exec -it frontend -- curl -m 5 172.17.0.5
+   10  #3
+   11  #4
+   12  #5
+   13  k delete pod kube-flannel
+   14  k delete pod kube-flannel-ds-z6lnk 
+   15  k delete pod kube-flannel-ds-z6lnk
+   16  k delete pod kube-flannel-ds-z6lnk -n kube-system 
+   17  k delete pod kube-flannel-ds-z6lnk -n kube-flannel 
+   18  k get configmaps 
+   19  k get configmaps -A
+   20  k delete cm -n kube-flannel kube-flannel-cfg 
+   21  k get ds -n kube-flannel kube-flannel-ds 
+   22  k delete ds -n kube-flannel kube-flannel-ds 
+   23  rm /etc/cni/net.d/10-flannel.conflist
+   24  #6
+   25  kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.32.1/manifests/v1_crd_projectcalico_org.yaml
+   26  kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.32.1/manifests/tigera-operator.yaml
+   27  curl -O https://raw.githubusercontent.com/projectcalico/calico/v3.32.1/manifests/custom-resources.yaml
+   28  kubectl create -f custom-resources.yaml
+   29  vi custom-resources.yaml 
+   30  k apply -f custom-resources.yaml 
+   31  kubectl describe installation default
+   32  #7
+   33  k exec -it frontend -- curl -m 5 172.17.0.5
+   34  k get np
+   35  k get netpol -A
+   36  k describe netpol deny-backend 
+   37  hitstory
+   38  history
