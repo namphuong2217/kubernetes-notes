@@ -1,6 +1,4 @@
-1. http://kubernetes.io/
-2. https://kubernetes.io/docs/reference/kubectl/quick-reference/
-3. 
+
 1. Review UI, Options
 - Task, Hint, Solution, AI Assistant
 - Open additional terminal

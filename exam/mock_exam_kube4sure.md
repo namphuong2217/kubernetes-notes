@@ -1,5 +1,13 @@
 # Miscellaneous
 
+### Hoc thuoc long
+```cmd
+annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+```
+### Allowed resources
+https://docs.linuxfoundation.org/tc-docs/certification/certification-resources-allowed
+
 ### Chu de khong thi
 1. Không có upgrade cluster
 2. Không có backup &resotore etcd

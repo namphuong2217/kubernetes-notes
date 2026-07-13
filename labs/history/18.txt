@@ -1,0 +1,79 @@
+# Practice Test - Installing Helm (7)
+controlplane ~ ➜  history
+    1  #1
+    2  helm -v
+    3  #2
+    4  curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4
+    5  chmod 700 get_helm.sh
+    6  ./get_helm.sh
+    7  helm -v
+    8  helm --version
+    9  helm list
+   10  #3
+   11  helm version
+   12  #4
+   13  helm --help | grep -i "debug" -C5
+   14  #5
+   15  helm --help | grep -i "flags" -A20
+   16  helm --help | grep -i "flags" -A50
+   17  #6
+   18  helm get --help
+   19  #7
+   20  history
+
+# Practice Test - Using Helm to Deploy a chart (12)
+controlplane ~ ➜  history
+    1  #1
+    2  #2
+    3  helm ls
+    4  #3
+    5  helm sarch hub consul
+    6  #4
+    7  helm search hub consul
+    8  #5
+    9  helm repo add https://charts.bitnami.com/bitnami
+   10  helm repo add bitnami https://charts.bitnami.com/bitnami
+   11  hlm repo list
+   12  helm repo list
+   13  #6
+   14  helm search repo wordpress
+   15  #7
+   16  helm repo list
+   17  #8
+   18  helm install amaze-surf bitnami/apache
+   19  #9#9
+   20  helm chart ls
+   21  helm show all
+   22  helm show all amaze-surf
+   23  helm show all bitnami/amaze-surf
+   24  helm list
+   25  #10
+   26  helm list
+   27  #11
+   28  helm uninstall happy-browse
+   29  #12
+   30  helm repo remove hashicorp
+   31  history
+
+#  Practice Test - Upgrading a Helm Chart (7)
+controlplane ~ ➜  history
+    1  #1
+    2  helm repo add bitnami https://charts.bitnami.com/bitnami
+    3  #2
+    4  helm list
+    5  #3
+    6  helm history
+    7  helm history dazzling-web
+    8  #4
+    9  #5
+   10  helm history dazzling-web
+   11  helm upgrade dazzling-web bitnami/nginx --version 18.3.6
+   12  helm history dazzling-web
+   13  helm list
+   14  #6
+   15  #7
+   16  helm rollback dazzling-web 3
+   17  helm history dazzling-web
+   18  helm rollback dazzling-web 2
+   19  helm history dazzling-web
+   20  history
