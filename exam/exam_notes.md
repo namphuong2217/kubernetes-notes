@@ -1,3 +1,23 @@
+# Mock exams
+sau khi em xem qua thì:
+câu 1: đề em thi yêu cầu tạo storage class, config storage class đó thành default storage class sau đó tạo pvc sử dụng sc đó và mount pvc cho pod
+câu 2: có trong đề thi
+câu 3: có trong đề thi
+câu 4: có trong đề thi
+câu 5: có trong đề thi
+câu 6: có trong đề thi
+câu 7: có trong đề thi
+câu 8: có trong đề thi
+câu 9: có trong đề thi
+câu 10: có trong đề thi
+câu 11: có trong đề thi nhưng không cần tạo ingress
+câu 12: có trong đề thi
+câu 13: giống với câu 1 em đã nêu ở trên
+câu 14: có trong đề thi
+câu 15: có trong đề thi
+câu 16: câu nàu em được yêu cầu sửa configmap để chấp nhận cả tlsv1.2 và tlsv1.3, và cấu hình configmap để nó immutable, còn phần map svc vào hostname trong /etc/hosts không có hỏi ạ
+em thấy nếu ôn kĩ 16 câu này thì 100 điểm khá dễ anh ạ
+nếu em biết được sớm hơn thì tốt quá, em thi được có 72 đ :(((
 
 1. Review UI, Options
 - Task, Hint, Solution, AI Assistant

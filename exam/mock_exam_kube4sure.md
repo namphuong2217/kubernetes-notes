@@ -117,6 +117,72 @@ no
 - **RoleBinding vs. ClusterRoleBinding (the core of this question)** — A **RoleBinding** (not a ClusterRoleBinding) is used to bind a **ClusterRole**. This is the standard pattern for "reuse a cluster-wide role definition, but scope the grant to one namespace." A RoleBinding referencing a ClusterRole only grants the permissions within the RoleBinding's own namespace — exactly what "limited to the namespace `app-team1`" requires. Using a **ClusterRoleBinding** here would have been **wrong**, since that would grant the permissions cluster-wide across *all* namespaces.
 - **Verification** — Impersonating the ServiceAccount and checking `create deployment` in `app-team1` (→ `yes`) and in `default` (→ `no`) correctly proves the permission is scoped only to `app-team1`.
 
+# Q2. Section: 🔧 Cluster Maintenance
+
+**Question 2** (2/18) — *Task weight: 3%*
+
+**Set configuration context:**
+
+```
+student@kube4sure:~$ kubectl config use-context ek8s
+```
+
+**Context:**
+
+Set the node named `ek8s-worker` as unavailable and reschedule all the pods running on it.
+
+**Hint 💡**
+
+Use the `kubectl drain` command to drain node.
+
+---
+
+### Solution 🔥
+
+Check status all the nodes in the cluster
+
+```
+student@kube4sure:~$ kubectl get nodes
+NAME                 STATUS   ROLES           AGE   VERSION
+ek8s-control-plane   Ready    control-plane   26m   v1.26.6
+ek8s-worker          Ready    <none>          26m   v1.26.6
+```
+
+Use the `kubectl drain` command to drain node in the cluster
+
+```
+student@kube4sure:~$ kubectl drain ek8s-worker --ignore-daemonsets --delete-emptydir-data
+```
+
+Check status all the nodes again
+
+```
+student@kube4sure:~$ kubectl get nodes
+NAME                 STATUS                     ROLES           AGE   VERSION
+ek8s-control-plane   Ready                      control-plane   27m   v1.26.6
+ek8s-worker          Ready,SchedulingDisabled    <none>          27m   v1.26.6
+```
+
+### Remarks — Các khái niệm liên quan
+
+Lệnh `kubectl drain` sẽ:
+
+1. **Mark node as unschedulable** (cordon)
+2. **Evict pods**
+3. **Scheduler** reschedule pods sang node khác
+
+**Flow thực tế:**
+
+```
+kubectl drain node
+       ↓
+Node SchedulingDisabled
+       ↓
+Pods bị evict
+       ↓
+Scheduler tạo pod mới trên node khác
+```
+
 # Q5. Networking (NetworkPolicy)
 
 **Question 5** (5/18) — *Task weight: 7%*
