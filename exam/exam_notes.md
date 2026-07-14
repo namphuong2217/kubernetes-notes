@@ -1,4 +1,8 @@
 # Mock exams
+
+Lay Camera microsoft
+Monitor
+
 sau khi em xem qua thì:
 câu 1: đề em thi yêu cầu tạo storage class, config storage class đó thành default storage class sau đó tạo pvc sử dụng sc đó và mount pvc cho pod
 câu 2: có trong đề thi
