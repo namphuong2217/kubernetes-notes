@@ -18,6 +18,9 @@ câu 11: có trong đề thi nhưng không cần tạo ingress
 câu 12: có trong đề thi
 câu 13: giống với câu 1 em đã nêu ở trên
 câu 14: có trong đề thi
+ssh worker node
+kubelet restart
+systemctl restart
 câu 15: có trong đề thi
 câu 16: câu nàu em được yêu cầu sửa configmap để chấp nhận cả tlsv1.2 và tlsv1.3, và cấu hình configmap để nó immutable, còn phần map svc vào hostname trong /etc/hosts không có hỏi ạ
 em thấy nếu ôn kĩ 16 câu này thì 100 điểm khá dễ anh ạ
