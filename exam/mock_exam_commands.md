@@ -1,3 +1,9 @@
+Stress test
+Chạy container có cmd cpu,
+https://killercoda.com/chadmcrowell/course/cka/metrics-server
+B1. k autoscale --help
+B2. kubectl -n scaling-lab autoscale deployment web-api --min=2 --max=5 --cpu=60% --dry-run=client -o yaml > q5.yaml
+B3. vi q5.yaml => Copy từ kubernetes.io
 ```cmd 
 # 5 HPA with stabiliztion window
 # Input: 
@@ -15,5 +21,18 @@ vi q5.yaml
 k get hpa -n scaling-lab web-api
 k get hpa web-api -n -scaling-lab -o yaml | grep -A2 scaleDown
 
+#7 Priority class
+# Input: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/
+
+k get deploy -o json # de dung patch
+
+k api-resources | grep prior
+k get priorityClasses --sort-by=.value
+k get priorityClasses --sort-by=.value | tac
+k create priorityClasses --help
+echo $((90000 - 1))
+k explain pod.spec | grep -i priority
+k explain pod.spec.priorityClassName | grep -i priority
+k explain deploy.spec.template.spec
 
 ```
