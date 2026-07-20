@@ -1,3 +1,20 @@
+# Ex 1
+```cmd 
+k get pv -A
+# Check pv status, claimRef, storage class
+vi q1.yaml
+# Create pvc
+# Lam sao nho duoc provisioner: rancher.io/local-path
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: my-storage
+provisioner: rancher.io/local-path
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+
+```
+
 # CKA 2026 - Ex 8: Install a CNI That Enforces Network Policy
 
 ## Goal
