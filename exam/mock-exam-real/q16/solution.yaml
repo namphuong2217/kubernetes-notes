@@ -1,0 +1,65 @@
+# Bước 1
+# Sửa ConfigMap.
+
+kubectl edit configmap web-tls-cfg -n secure-web
+
+---
+
+# Đổi
+
+ssl_protocols TLSv1.2 TLSv1.3;
+
+# thành
+
+ssl_protocols TLSv1.2;
+
+---
+
+# Bước 2
+# Restart Deployment để nginx đọc lại ConfigMap.
+
+kubectl rollout restart deployment secure-web -n secure-web
+
+kubectl rollout status deployment secure-web -n secure-web
+
+---
+
+# Bước 3
+# Lấy ClusterIP của Service.
+
+SERVICE_IP=$(kubectl get svc secure-web \
+    -n secure-web \
+    -o jsonpath='{.spec.clusterIP}')
+
+---
+
+# Bước 4
+# Thêm hostname vào /etc/hosts.
+
+echo "${SERVICE_IP} tls-check.k8s.local" >> /etc/hosts
+
+---
+
+# Kiểm tra
+
+curl -vk --tlsv1.3 https://tls-check.k8s.local
+
+# Kết quả mong đợi:
+# TLS handshake failure
+
+---
+
+curl -vk --tls-max 1.2 https://tls-check.k8s.local
+
+# Kết quả mong đợi:
+# HTTP/1.1 200 OK
+
+---
+
+# Kết quả mong đợi
+
+# - ConfigMap chỉ còn TLSv1.2.
+# - Deployment đã được restart.
+# - /etc/hosts có hostname tls-check.k8s.local.
+# - TLSv1.3 bị từ chối.
+# - TLSv1.2 truy cập thành công.

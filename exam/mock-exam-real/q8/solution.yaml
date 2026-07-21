@@ -1,0 +1,67 @@
+# ==========================================================
+# HƯỚNG DẪN GIẢI - Question 8
+# Install a CNI That Enforces Network Policy
+# ==========================================================
+
+# ----------------------------------------------------------
+# Bước 1 - Cài Tigera Operator
+# ----------------------------------------------------------
+
+kubectl create -f \
+https://raw.githubusercontent.com/projectcalico/calico/v3.29.1/manifests/tigera-operator.yaml
+
+# ----------------------------------------------------------
+# Bước 2 - Kiểm tra Pod CIDR
+# ----------------------------------------------------------
+
+kubectl cluster-info dump | grep -m1 cluster-cidr
+
+# Nếu Pod CIDR khác:
+
+# 192.168.0.0/16
+
+# thì tải custom-resources.yaml và sửa:
+
+spec:
+  calicoNetwork:
+    ipPools:
+    - cidr: <pod-cidr>
+
+# ----------------------------------------------------------
+# Bước 3 - Apply Installation
+# ----------------------------------------------------------
+
+kubectl apply -f \
+https://raw.githubusercontent.com/projectcalico/calico/v3.29.1/manifests/custom-resources.yaml
+
+# ----------------------------------------------------------
+# Bước 4 - Kiểm Tra
+# ----------------------------------------------------------
+
+kubectl get all -n tigera-operator
+
+kubectl get pods -n calico-system
+
+kubectl get tigerastatus
+
+kubectl get nodes
+
+kubectl get pods -A | grep -Ei 'calico|tigera'
+
+# ==========================================================
+# KẾT QUẢ MONG ĐỢI
+# ==========================================================
+
+# ✓ tigera-operator Running
+#
+# ✓ calico-node Running
+#
+# ✓ calico-kube-controllers Running
+#
+# ✓ tigerastatus AVAILABLE=True
+#
+# ✓ All Nodes Ready
+#
+# ✓ Pods can communicate across nodes
+#
+# ✓ Kubernetes NetworkPolicy is enforced

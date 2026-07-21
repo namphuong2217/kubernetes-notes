@@ -1,0 +1,101 @@
+# ==========================================================
+# HƯỚNG DẪN GIẢI - Question 5
+# Horizontal Pod Autoscaler with Stabilization Window
+# ==========================================================
+
+# ----------------------------------------------------------
+# Bước 1 - Kiểm tra Deployment
+# ----------------------------------------------------------
+
+kubectl get deployment web-api-deployment \
+  -n scaling-lab
+
+# ----------------------------------------------------------
+# Bước 2 - Tạo HPA Manifest
+# ----------------------------------------------------------
+
+cat <<EOF > hpa.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: web-api
+  namespace: scaling-lab
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: web-api-deployment
+
+  minReplicas: 2
+  maxReplicas: 5
+
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 60
+
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 45
+EOF
+
+# ----------------------------------------------------------
+# Bước 3 - Apply Manifest
+# ----------------------------------------------------------
+
+kubectl apply -f hpa.yaml
+
+# ----------------------------------------------------------
+# Bước 4 - Kiểm Tra
+# ----------------------------------------------------------
+
+kubectl get hpa \
+  -n scaling-lab
+
+kubectl describe hpa web-api \
+  -n scaling-lab
+
+kubectl get hpa web-api \
+  -n scaling-lab \
+  -o yaml | grep -A2 scaleDown
+
+# ----------------------------------------------------------
+# Bước 5 - Verify
+# ----------------------------------------------------------
+
+./verify.sh
+
+# ==========================================================
+# KẾT QUẢ MONG ĐỢI
+# ==========================================================
+
+# ✓ HPA:
+#
+# web-api
+#
+# ✓ Target:
+#
+# Deployment/web-api-deployment
+#
+# ✓ CPU Target:
+#
+# 60%
+#
+# ✓ Min Replicas:
+#
+# 2
+#
+# ✓ Max Replicas:
+#
+# 5
+#
+# ✓ Downscale Stabilization Window:
+#
+# 45 seconds
+#
+# ✓ Verify:
+#
+# Question 5 PASSED

@@ -1,0 +1,58 @@
+# Bước 1
+# Lấy YAML của Deployment hiện tại để chỉnh sửa.
+
+kubectl get deployment web-front -n svc-lab -o yaml > deploy.yaml
+
+---
+
+# Bước 2
+# Thêm containerPort 3000 vào container node-app.
+
+spec:
+  template:
+    spec:
+      containers:
+      - name: node-app
+        ports:
+        - containerPort: 3000
+
+---
+
+# Bước 3
+# Apply lại Deployment.
+
+kubectl apply -f deploy.yaml
+
+---
+
+# Bước 4
+# Tạo Service kiểu NodePort.
+# Không chỉ định nodePort vì đề yêu cầu Kubernetes tự cấp.
+
+kubectl expose deployment web-front \
+  -n svc-lab \
+  --name web-front-svc \
+  --port=3000 \
+  --target-port=3000 \
+  --type=NodePort
+
+---
+
+# Kiểm tra
+
+kubectl describe deployment web-front -n svc-lab | grep -i Port
+
+kubectl get svc web-front-svc -n svc-lab
+
+kubectl get endpoints web-front-svc -n svc-lab
+
+---
+
+# Kết quả mong đợi
+#
+# - Deployment web-front có containerPort 3000.
+# - Service web-front-svc tồn tại.
+# - Service có type NodePort.
+# - Service expose port 3000.
+# - NodePort được Kubernetes tự cấp.
+# - Endpoints không phải <none>.

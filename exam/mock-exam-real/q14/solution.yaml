@@ -1,0 +1,111 @@
+# ==========================================================
+# HƯỚNG DẪN GIẢI - Question 14
+# Fix a Broken kube-apiserver → etcd Connection
+# ==========================================================
+
+# ----------------------------------------------------------
+# Bước 1 - Chẩn đoán
+# ----------------------------------------------------------
+
+kubectl get nodes
+
+# kubectl sẽ timeout hoặc connection refused
+# vì kube-apiserver đang không hoạt động.
+
+sudo crictl ps -a | grep kube-apiserver
+
+# Kiểm tra kube-apiserver có đang restart liên tục hay không.
+
+sudo grep etcd-servers \
+/etc/kubernetes/manifests/kube-apiserver.yaml
+
+# Ví dụ:
+#
+# --etcd-servers=https://192.168.1.10:2379
+#
+# Đây là IP cũ của etcd.
+
+# Vì sao:
+#
+# Khi API Server bị down,
+# kubectl hoàn toàn không sử dụng được.
+#
+# Cần làm việc trực tiếp với:
+#
+# - crictl
+# - Static Pod Manifest
+#
+# để tìm nguyên nhân.
+
+# ----------------------------------------------------------
+# Bước 2 - Sửa endpoint etcd
+# ----------------------------------------------------------
+
+sudo vi \
+/etc/kubernetes/manifests/kube-apiserver.yaml
+
+# Đổi:
+
+# --etcd-servers=https://192.168.1.10:2379
+
+# thành:
+
+# --etcd-servers=https://192.168.1.20:2379
+
+# ----------------------------------------------------------
+# Bước 3 - Chờ kubelet restart Static Pod
+# ----------------------------------------------------------
+
+sleep 60
+
+# Vì sao:
+#
+# kube-apiserver là Static Pod.
+#
+# Kubelet luôn theo dõi thư mục:
+#
+# /etc/kubernetes/manifests
+#
+# Khi manifest thay đổi,
+# kubelet sẽ tự động:
+#
+# - xóa Pod cũ
+# - tạo Pod mới
+#
+# Không cần:
+#
+# kubectl apply
+#
+# hay restart kubelet.
+
+# ----------------------------------------------------------
+# Bước 4 - Kiểm tra
+# ----------------------------------------------------------
+
+kubectl get nodes
+
+kubectl -n kube-system get pods \
+| grep kube-apiserver
+
+sudo grep etcd-servers \
+/etc/kubernetes/manifests/kube-apiserver.yaml
+
+# ----------------------------------------------------------
+# Bước 5 - Verify
+# ----------------------------------------------------------
+
+./verify.sh
+
+# ==========================================================
+# KẾT QUẢ MONG ĐỢI
+# ==========================================================
+
+# ✓ kube-apiserver Running
+#
+# ✓ kubectl hoạt động trở lại
+#
+# ✓ --etcd-servers=https://192.168.1.20:2379
+#
+# ✓ Verify:
+#
+# Question 14 PASSED

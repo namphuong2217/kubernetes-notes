@@ -1,0 +1,102 @@
+# ==========================================================
+# HƯỚNG DẪN GIẢI - Question 7
+# PriorityClass for Critical Workloads
+# ==========================================================
+
+# ----------------------------------------------------------
+# Bước 1 - Xem PriorityClass hiện có
+# ----------------------------------------------------------
+
+kubectl get priorityclass
+
+# Bỏ qua:
+#
+# system-cluster-critical
+# system-node-critical
+#
+# Tìm PriorityClass user-defined có value lớn nhất.
+
+# ----------------------------------------------------------
+# Bước 2 - Tạo PriorityClass mới
+# ----------------------------------------------------------
+
+# Ví dụ:
+#
+# PriorityClass cao nhất:
+#
+# high-priority = 900000
+#
+# => elevated-priority = 899999
+
+kubectl create priorityclass elevated-priority \
+  --value=899999
+
+# Kiểm tra
+
+kubectl get priorityclass elevated-priority
+
+# ----------------------------------------------------------
+# Bước 3 - Patch Deployment
+# ----------------------------------------------------------
+
+kubectl edit deployment log-collector \
+  -n workloads
+
+# Thêm vào:
+#
+# spec.template.spec
+
+priorityClassName: elevated-priority
+
+# ----------------------------------------------------------
+# Bước 4 - Chờ Rollout
+# ----------------------------------------------------------
+
+kubectl rollout status deployment log-collector \
+  -n workloads
+
+# ----------------------------------------------------------
+# Bước 5 - Kiểm Tra
+# ----------------------------------------------------------
+
+kubectl get priorityclass elevated-priority
+
+kubectl get deployment log-collector \
+  -n workloads \
+  -o jsonpath='{.spec.template.spec.priorityClassName}'
+
+# ----------------------------------------------------------
+# Bước 6 - Verify
+# ----------------------------------------------------------
+
+./verify.sh
+
+# ==========================================================
+# KẾT QUẢ MONG ĐỢI
+# ==========================================================
+
+# ✓ PriorityClass:
+#
+# elevated-priority
+#
+# ✓ Value:
+#
+# 899999
+#
+# (cao nhất hiện có - 1)
+#
+# ✓ Deployment:
+#
+# log-collector
+#
+# ✓ PriorityClassName:
+#
+# elevated-priority
+#
+# ✓ Pod:
+#
+# Running
+#
+# ✓ Verify:
+#
+# Question 7 PASSED

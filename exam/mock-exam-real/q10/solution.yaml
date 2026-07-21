@@ -1,0 +1,195 @@
+# ==========================================================
+# HƯỚNG DẪN GIẢI - Question 10
+# Migrate Ingress to Gateway API
+# ==========================================================
+
+# ----------------------------------------------------------
+# Bước 1 - Xem cấu hình Ingress hiện tại
+# ----------------------------------------------------------
+
+kubectl describe ingress api-ingress
+
+# Kết quả cần lấy:
+#
+# Host:
+# api.gateway.local
+#
+# TLS Secret:
+# api-tls
+#
+# Backend:
+# api-service:80
+#
+# Path:
+# /
+#
+# PathType:
+# Prefix
+
+# Vì sao:
+#
+# Đề yêu cầu "preserve" cấu hình hiện có.
+#
+# Không nên hardcode Gateway hay HTTPRoute theo suy đoán.
+# Hãy lấy đúng:
+#
+# - Hostname
+# - TLS Secret
+# - Backend Service
+# - Backend Port
+# - Path
+#
+# từ Ingress hiện tại rồi chuyển sang Gateway API.
+#
+# Đây cũng là cách migrate được hướng dẫn trong tài liệu Gateway API.
+
+# ----------------------------------------------------------
+# Bước 2 - Tạo Gateway
+# ----------------------------------------------------------
+
+cat <<EOF > gateway.yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: api-gateway
+spec:
+  gatewayClassName: nginx-gw
+  listeners:
+  - name: https
+    protocol: HTTPS
+    port: 443
+    hostname: api.gateway.local
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - kind: Secret
+        name: api-tls
+EOF
+
+kubectl apply -f gateway.yaml
+
+# Vì sao:
+#
+# Gateway thay thế phần Listener của Ingress.
+#
+# Listener HTTPS phải giữ nguyên:
+#
+# - hostname
+# - TLS Secret
+# - port
+#
+# để ứng dụng hoạt động giống như trước.
+
+# ----------------------------------------------------------
+# Bước 3 - Tạo HTTPRoute
+# ----------------------------------------------------------
+
+cat <<EOF > httproute.yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: api-route
+spec:
+  parentRefs:
+  - name: api-gateway
+  hostnames:
+  - api.gateway.local
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - name: api-service
+      port: 80
+EOF
+
+kubectl apply -f httproute.yaml
+
+# Vì sao:
+#
+# HTTPRoute thay thế phần Rules của Ingress.
+#
+# parentRefs là field dùng để gắn Route vào Gateway.
+#
+# Nếu thiếu parentRefs,
+# HTTPRoute vẫn được tạo nhưng Gateway sẽ không sử dụng Route này.
+
+# ----------------------------------------------------------
+# Bước 4 - Kiểm tra Gateway
+# ----------------------------------------------------------
+
+kubectl describe gateway api-gateway
+
+# Kiểm tra:
+#
+# - HTTPS
+# - Port 443
+# - Host api.gateway.local
+# - TLS Secret api-tls
+
+# ----------------------------------------------------------
+# Bước 5 - Kiểm tra HTTPRoute
+# ----------------------------------------------------------
+
+kubectl describe httproute api-route
+
+# Kiểm tra:
+#
+# parentRef:
+# api-gateway
+#
+# Hostname:
+# api.gateway.local
+#
+# Path:
+# /
+#
+# Backend:
+# api-service:80
+
+# ----------------------------------------------------------
+# Bước 6 - Verify
+# ----------------------------------------------------------
+
+./verify.sh
+
+# ==========================================================
+# KẾT QUẢ MONG ĐỢI
+# ==========================================================
+
+# ✓ Gateway:
+#
+# api-gateway
+#
+# ✓ GatewayClass:
+#
+# nginx-gw
+#
+# ✓ Listener:
+#
+# HTTPS
+#
+# ✓ Hostname:
+#
+# api.gateway.local
+#
+# ✓ TLS Secret:
+#
+# api-tls
+#
+# ✓ HTTPRoute:
+#
+# api-route
+#
+# ✓ ParentRef:
+#
+# api-gateway
+#
+# ✓ Backend:
+#
+# api-service:80
+#
+# ✓ Verify:
+#
+# Question 10 PASSED

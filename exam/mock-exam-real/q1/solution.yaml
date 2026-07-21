@@ -1,0 +1,112 @@
+# ==========================================================
+# HƯỚNG DẪN GIẢI - Câu 1
+# Reattach an Orphaned PersistentVolume
+# ==========================================================
+
+# ----------------------------------------------------------
+# Bước 1 - Kiểm tra PersistentVolume hiện có
+# ----------------------------------------------------------
+
+# Liệt kê PersistentVolume
+
+kubectl get pv
+
+# Xem chi tiết PersistentVolume
+
+kubectl describe pv redis-pv
+
+# Kỳ vọng:
+# - STATUS: Released
+# - CAPACITY: 500Mi
+# - ACCESS MODE: ReadWriteOnce
+
+# ----------------------------------------------------------
+# Bước 2 - Xóa claimRef cũ để đưa PV về trạng thái Available
+# ----------------------------------------------------------
+
+kubectl patch pv redis-pv -p '{"spec":{"claimRef":null}}'
+# ----- (hoặc edit pv <pv-name> rồi xóa phần claimRef cũ đi)
+
+# Kiểm tra lại
+
+kubectl get pv
+
+# Kỳ vọng:
+# STATUS: Available
+
+# ----------------------------------------------------------
+# Bước 3 - Tạo PersistentVolumeClaim mới
+# ----------------------------------------------------------
+
+# Tạo file pvc.yaml
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-data
+  namespace: redis-store
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Mi
+
+# Apply PVC
+
+kubectl apply -f pvc.yaml
+
+# ----------------------------------------------------------
+# Bước 4 - Cập nhật Deployment sử dụng PVC vừa tạo
+# ----------------------------------------------------------
+
+# Mở file Deployment
+
+vi redis-deploy.yaml
+
+# Thay đổi
+
+persistentVolumeClaim:
+  claimName: CHANGE_ME
+
+# Thành
+
+persistentVolumeClaim:
+  claimName: redis-data
+
+# ----------------------------------------------------------
+# Bước 5 - Apply lại Deployment
+# ----------------------------------------------------------
+
+kubectl apply -f redis-deploy.yaml
+
+# ----------------------------------------------------------
+# Bước 6 - Kiểm tra kết quả
+# ----------------------------------------------------------
+
+# PVC đã bind thành công
+
+kubectl get pvc redis-data -n redis-store
+
+# Kỳ vọng:
+# STATUS: Bound
+
+# PV đã được bind với PVC mới
+
+kubectl get pv
+
+# Kỳ vọng:
+# STATUS: Bound
+# CLAIM: redis-store/redis-data
+
+# Deployment rollout thành công
+
+kubectl rollout status deployment/redis -n redis-store
+
+# Pod đã chạy ổn định
+
+kubectl get pods -n redis-store
+
+# Kỳ vọng:
+# READY: 1/1
+# STATUS: Running

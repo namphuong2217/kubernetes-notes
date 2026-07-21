@@ -1,0 +1,118 @@
+# ==========================================================
+# HƯỚNG DẪN GIẢI - Question 2
+# Argo CD via Helm Template Without CRDs
+# ==========================================================
+
+# ----------------------------------------------------------
+# Bước 1 - Tạo Namespace
+# ----------------------------------------------------------
+
+kubectl create namespace gitops-ns
+
+# Kiểm tra
+
+kubectl get namespace gitops-ns
+
+
+# ----------------------------------------------------------
+# Bước 2 - Add Helm Repository
+# ----------------------------------------------------------
+
+helm repo add argo-helm https://argoproj.github.io/argo-helm
+
+helm repo update
+
+# Kiểm tra
+
+helm repo list | grep argo-helm
+
+
+# ----------------------------------------------------------
+# Bước 3 - Generate Helm Template
+# ----------------------------------------------------------
+
+helm template argocd argo-helm/argo-cd \
+  --version 7.9.0 \
+  --namespace gitops-ns \
+  --set crds.install=false \
+  > /root/argocd-template.yaml
+
+# Kiểm tra
+
+ls -lh /root/argocd-template.yaml
+
+
+# ----------------------------------------------------------
+# Bước 4 - Kiểm tra Template Không Chứa CRDs
+# ----------------------------------------------------------
+
+grep -c "^kind: CustomResourceDefinition" /root/argocd-template.yaml
+
+# Kết quả mong đợi
+
+0
+
+
+# ----------------------------------------------------------
+# Bước 5 - Install Argo CD
+# ----------------------------------------------------------
+
+helm install argocd argo-helm/argo-cd \
+  --version 7.9.0 \
+  --namespace gitops-ns \
+  --set crds.install=false
+
+# Kiểm tra
+
+helm list -n gitops-ns
+
+
+# ----------------------------------------------------------
+# Bước 6 - Kiểm tra Pods
+# ----------------------------------------------------------
+
+kubectl get pods -n gitops-ns
+
+
+# ----------------------------------------------------------
+# Bước 7 - Chạy Verify Script
+# ----------------------------------------------------------
+
+./verify.sh
+
+
+# ==========================================================
+# KẾT QUẢ MONG ĐỢI
+# ==========================================================
+
+# ✓ Helm Repository:
+#
+# argo-helm
+#
+# ✓ Namespace:
+#
+# gitops-ns
+#
+# ✓ File:
+#
+# /root/argocd-template.yaml
+#
+# ✓ Template:
+#
+# Không chứa CustomResourceDefinition
+#
+# ✓ Helm Release:
+#
+# argocd
+#
+# ✓ Chart Version:
+#
+# argo-cd-7.9.0
+#
+# ✓ Pods:
+#
+# Running hoặc ContainerCreating
+#
+# ✓ Verify:
+#
+# Question 2 PASSED

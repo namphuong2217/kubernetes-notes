@@ -1,0 +1,102 @@
+# ==========================================================
+# HƯỚNG DẪN GIẢI - Question 13
+# Create and Switch the Default StorageClass
+# ==========================================================
+
+# ----------------------------------------------------------
+# Bước 1 - Tạo StorageClass (không đặt default)
+# ----------------------------------------------------------
+
+cat <<EOF > storageclass.yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: local-fast
+provisioner: rancher.io/local-path
+volumeBindingMode: WaitForFirstConsumer
+EOF
+
+kubectl apply -f storageclass.yaml
+
+# Vì sao:
+#
+# Đề yêu cầu KHÔNG đánh dấu default ngay khi tạo.
+#
+# Do đó không thêm annotation:
+#
+# storageclass.kubernetes.io/is-default-class=true
+#
+# trong manifest.
+
+# ----------------------------------------------------------
+# Bước 2 - Patch local-fast thành default
+# ----------------------------------------------------------
+
+kubectl patch storageclass local-fast \
+-p '{"metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+
+# Vì sao:
+#
+# Đề yêu cầu chuyển thành default bằng lệnh patch,
+# không phải khai báo sẵn trong YAML.
+
+# ----------------------------------------------------------
+# Bước 3 - Bỏ default của StorageClass cũ
+# ----------------------------------------------------------
+
+kubectl patch storageclass standard \
+-p '{"metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"false"}}}'
+
+# Vì sao:
+#
+# Kubernetes cho phép nhiều StorageClass cùng được
+# đánh dấu default.
+#
+# Tuy nhiên đề yêu cầu chỉ còn duy nhất local-fast
+# là StorageClass mặc định.
+
+# ----------------------------------------------------------
+# Bước 4 - Kiểm tra
+# ----------------------------------------------------------
+
+kubectl get storageclass
+
+# Kết quả mong muốn:
+#
+# local-fast (default)
+#
+# standard
+#
+# (không còn chữ default)
+
+# ----------------------------------------------------------
+# Bước 5 - Verify
+# ----------------------------------------------------------
+
+./verify.sh
+
+# ==========================================================
+# KẾT QUẢ MONG ĐỢI
+# ==========================================================
+
+# ✓ StorageClass local-fast tồn tại
+#
+# ✓ Provisioner:
+#
+# rancher.io/local-path
+#
+# ✓ volumeBindingMode:
+#
+# WaitForFirstConsumer
+#
+# ✓ local-fast là StorageClass mặc định
+#
+# ✓ standard không còn là StorageClass mặc định
+#
+# ✓ Chỉ có một StorageClass mặc định
+#
+# ✓ Không thay đổi Deployment hoặc PVC
+#
+# ✓ Verify:
+#
+# Question 13 PASSED

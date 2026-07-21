@@ -860,6 +860,12 @@ Apply strictest policy
 Verify connection
 ```
 
+# Ex 13
+```cmd
+k get storageclass local-storage -ojson
+k patch storageclass local-storage -p '{}'
+k patch storageclass standard -p '{}'
+```
 # CKA 2026 - Ex 14: Fix Broken kube-apiserver -> etcd Connection
 
 ## Goal

@@ -1,0 +1,57 @@
+# ==========================================================
+# HƯỚNG DẪN GIẢI - Question 6
+# Custom Resource Definitions (cert-manager)
+# ==========================================================
+
+# ----------------------------------------------------------
+# Bước 1 - Liệt kê cert-manager CRDs
+# ----------------------------------------------------------
+
+kubectl get crd | grep cert-manager > /root/cm-crds.yaml
+
+# Kiểm tra
+
+cat /root/cm-crds.yaml
+
+# ----------------------------------------------------------
+# Bước 2 - Xem Documentation của dnsNames
+# ----------------------------------------------------------
+
+kubectl explain certificate.spec.dnsNames > /root/dnsnames.yaml
+
+# Kiểm tra
+
+cat /root/dnsnames.yaml
+
+# ----------------------------------------------------------
+# Bước 3 - Verify
+# ----------------------------------------------------------
+
+./verify.sh
+
+# ==========================================================
+# KẾT QUẢ MONG ĐỢI
+# ==========================================================
+
+# ✓ File:
+#
+# /root/cm-crds.yaml
+#
+# Chứa các cert-manager CRDs
+#
+# certificates.cert-manager.io
+# issuers.cert-manager.io
+# clusterissuers.cert-manager.io
+# ...
+#
+# ✓ File:
+#
+# /root/dnsnames.yaml
+#
+# Chứa documentation của
+#
+# Certificate.spec.dnsNames
+#
+# ✓ Verify:
+#
+# Question 6 PASSED

@@ -1,0 +1,124 @@
+# ==========================================================
+# HƯỚNG DẪN GIẢI - Question 12
+# Choose the Least-Permissive NetworkPolicy
+# ==========================================================
+
+# ----------------------------------------------------------
+# Bước 1 - Đọc cả 3 file NetworkPolicy
+# ----------------------------------------------------------
+
+cat /root/netpols/policy-1.yaml
+
+cat /root/netpols/policy-2.yaml
+
+cat /root/netpols/policy-3.yaml
+
+# Vì sao:
+#
+# Đề yêu cầu chọn policy "least permissive".
+#
+# Nghĩa là không phải policy nào hoạt động cũng đúng,
+# mà phải chọn policy cấp ít quyền nhất nhưng vẫn
+# đáp ứng yêu cầu.
+
+# Ví dụ:
+#
+# Policy 1
+#
+# podSelector: {}
+#
+# => áp dụng cho toàn bộ Pod trong namespace.
+#
+# Quá rộng.
+
+# Policy 2
+#
+# Cho phép namespace web-tier,
+# nhưng còn mở thêm ipBlock.
+#
+# => Thừa quyền.
+
+# Policy 3
+#
+# Chỉ:
+#
+# - Pod app=api-tier
+# - Namespace web-tier
+# - Pod app=web-tier
+# - TCP 8080
+#
+# => Least Privilege.
+
+# ----------------------------------------------------------
+# Bước 2 - Kiểm tra Label
+# ----------------------------------------------------------
+
+kubectl get pods \
+-n web-tier \
+--show-labels
+
+# Vì sao:
+#
+# NetworkPolicy sử dụng Label Selector.
+#
+# Nếu label không đúng,
+# policy sẽ không match Pod.
+
+# ----------------------------------------------------------
+# Bước 3 - Apply Policy
+# ----------------------------------------------------------
+
+kubectl apply \
+-f /root/netpols/policy-3.yaml
+
+# Vì sao:
+#
+# Chỉ policy này đáp ứng:
+#
+# - đúng Pod nguồn
+# - đúng Namespace nguồn
+# - đúng Pod đích
+# - đúng Port
+#
+# mà không cấp thêm quyền.
+
+# ----------------------------------------------------------
+# Bước 4 - Kiểm tra
+# ----------------------------------------------------------
+
+kubectl get networkpolicy \
+-n api-tier
+
+kubectl describe networkpolicy \
+-n api-tier
+
+# ----------------------------------------------------------
+# Bước 5 - Kiểm tra kết nối
+# ----------------------------------------------------------
+
+kubectl exec \
+-n web-tier \
+deploy/web-tier \
+-- \
+curl -s --max-time 5 \
+api-tier-service.api-tier.svc.cluster.local:8080
+
+# ----------------------------------------------------------
+# Bước 6 - Verify
+# ----------------------------------------------------------
+
+./verify.sh
+
+# ==========================================================
+# KẾT QUẢ MONG ĐỢI
+# ==========================================================
+
+# ✓ Chỉ có một NetworkPolicy được apply
+#
+# ✓ NetworkPolicy đúng là policy ít quyền nhất
+#
+# ✓ web-tier truy cập được api-tier:8080
+#
+# ✓ Verify:
+#
+# Question 12 PASSED

@@ -1,0 +1,155 @@
+# ==========================================================
+# HƯỚNG DẪN GIẢI - Question 11
+# Expose a Deployment via NodePort and Ingress
+# ==========================================================
+
+# ----------------------------------------------------------
+# Bước 1 - Expose Deployment bằng Service NodePort
+# ----------------------------------------------------------
+
+kubectl expose deployment echo-server \
+  -n echo-lab \
+  --name echo-svc \
+  --type NodePort \
+  --port 9090 \
+  --target-port 9090
+
+# Vì sao:
+#
+# Deployment hiện chỉ có Pod.
+#
+# Để truy cập từ bên ngoài Node,
+# cần tạo Service kiểu NodePort.
+#
+# Service sẽ tự cấp một NodePort
+# trong khoảng 30000-32767.
+
+# ----------------------------------------------------------
+# Bước 2 - Tạo Ingress
+# ----------------------------------------------------------
+
+cat <<EOF > ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: echo-ing
+  namespace: echo-lab
+spec:
+  rules:
+  - host: echo.example.local
+    http:
+      paths:
+      - path: /ping
+        pathType: Prefix
+        backend:
+          service:
+            name: echo-svc
+            port:
+              number: 9090
+EOF
+
+kubectl apply -f ingress.yaml
+
+# Vì sao:
+#
+# Ingress sẽ route request:
+#
+# http://echo.example.local/ping
+#
+# đến Service echo-svc.
+#
+# pathType Prefix nghĩa là:
+#
+# /ping
+# /ping/
+# /ping/test
+#
+# đều được match.
+
+# ----------------------------------------------------------
+# Bước 3 - Lấy NodePort
+# ----------------------------------------------------------
+
+kubectl get svc echo-svc -n echo-lab
+
+# Ví dụ:
+#
+# PORT(S)
+#
+# 9090:31452/TCP
+
+# ----------------------------------------------------------
+# Bước 4 - Kiểm tra NodePort
+# ----------------------------------------------------------
+
+NODE_IP=$(kubectl get node \
+-o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
+
+NODE_PORT=$(kubectl get svc echo-svc \
+-n echo-lab \
+-o jsonpath='{.spec.ports[0].nodePort}')
+
+curl http://$NODE_IP:$NODE_PORT/ping
+
+# ----------------------------------------------------------
+# Bước 5 - Kiểm tra Ingress (nếu môi trường hỗ trợ)
+# ----------------------------------------------------------
+
+curl -o /dev/null \
+-s \
+-w "%{http_code}\n" \
+http://echo.example.local/ping
+
+# Lưu ý:
+#
+# Chỉ thực hiện được khi:
+#
+# - Đã cài Ingress Controller
+#
+# - echo.example.local
+#   đã được trỏ đúng IP
+#   (DNS hoặc /etc/hosts)
+
+# ----------------------------------------------------------
+# Bước 6 - Verify
+# ----------------------------------------------------------
+
+./verify.sh
+
+# ==========================================================
+# KẾT QUẢ MONG ĐỢI
+# ==========================================================
+
+# ✓ Service:
+#
+# echo-svc
+#
+# ✓ Type:
+#
+# NodePort
+#
+# ✓ Port:
+#
+# 9090
+#
+# ✓ Ingress:
+#
+# echo-ing
+#
+# ✓ Host:
+#
+# echo.example.local
+#
+# ✓ Path:
+#
+# /ping
+#
+# ✓ Backend:
+#
+# echo-svc:9090
+#
+# ✓ NodePort truy cập được
+#
+# ✓ Verify:
+#
+# Question 11 PASSED

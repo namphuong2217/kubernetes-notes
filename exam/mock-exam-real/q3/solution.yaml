@@ -1,0 +1,111 @@
+# ==========================================================
+# HƯỚNG DẪN GIẢI - Question 3
+# Sidecar Container Sharing a Log Volume
+# ==========================================================
+
+# ----------------------------------------------------------
+# Bước 1 - Chỉnh sửa Deployment
+# ----------------------------------------------------------
+
+vi apache-web.yaml
+
+# ----------------------------------------------------------
+# Bước 2 - Thêm Shared Volume
+# ----------------------------------------------------------
+
+spec:
+  template:
+    spec:
+      volumes:
+      - name: log
+        emptyDir: {}
+
+# ----------------------------------------------------------
+# Bước 3 - Mount Volume cho Container Chính
+# ----------------------------------------------------------
+
+containers:
+- name: apache-web
+  ...
+
+  volumeMounts:
+  - name: log
+    mountPath: /var/log
+
+# ----------------------------------------------------------
+# Bước 4 - Thêm Sidecar Container
+# ----------------------------------------------------------
+
+- name: log-shipper
+  image: busybox:stable
+  command:
+  - /bin/sh
+  - -c
+  - tail -f /var/log/apache-web.log
+
+  volumeMounts:
+  - name: log
+    mountPath: /var/log
+
+# ----------------------------------------------------------
+# Bước 5 - Apply Deployment
+# ----------------------------------------------------------
+
+kubectl apply -f apache-web.yaml
+
+# ----------------------------------------------------------
+# Bước 6 - Chờ Rollout
+# ----------------------------------------------------------
+
+kubectl rollout status deployment/apache-web
+
+# ----------------------------------------------------------
+# Bước 7 - Kiểm Tra
+# ----------------------------------------------------------
+
+kubectl get pods -l app=apache-web
+
+kubectl logs deploy/apache-web -c log-shipper --tail=5
+
+# ----------------------------------------------------------
+# Bước 8 - Verify
+# ----------------------------------------------------------
+
+./verify.sh
+
+# ==========================================================
+# KẾT QUẢ MONG ĐỢI
+# ==========================================================
+
+# ✓ Deployment:
+#
+# apache-web
+#
+# ✓ Containers:
+#
+# apache-web
+# log-shipper
+#
+# ✓ Shared Volume:
+#
+# emptyDir
+#
+# ✓ Mount Path:
+#
+# /var/log
+#
+# ✓ Sidecar Command:
+#
+# tail -f /var/log/apache-web.log
+#
+# ✓ Pod:
+#
+# READY 2/2
+#
+# ✓ Sidecar:
+#
+# Đọc được log từ container chính
+#
+# ✓ Verify:
+#
+# Question 3 PASSED

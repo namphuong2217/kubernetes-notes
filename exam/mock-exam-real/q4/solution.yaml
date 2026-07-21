@@ -1,0 +1,159 @@
+# ==========================================================
+# HƯỚNG DẪN GIẢI - Question 4
+# Fair Resource Allocation Across Pods
+# ==========================================================
+
+# ----------------------------------------------------------
+# Bước 1 - Scale Deployment về 0
+# ----------------------------------------------------------
+
+kubectl scale deployment blog-app \
+  -n eager-fox \
+  --replicas=0
+
+# Kiểm tra
+
+kubectl get deploy blog-app -n eager-fox
+
+
+# ----------------------------------------------------------
+# Bước 2 - Xem Allocatable Resource của Node
+# ----------------------------------------------------------
+
+kubectl get nodes
+
+kubectl describe node <node-name> | grep -A5 Allocatable
+
+# Ví dụ
+
+# cpu:       2
+# memory:    4Gi
+
+
+# ----------------------------------------------------------
+# Bước 3 - Chia Resource Cho 5 Pods
+# ----------------------------------------------------------
+
+# Chừa khoảng 20% tài nguyên cho:
+#
+# - Kubernetes components
+# - kubelet
+# - container runtime
+# - OS
+#
+# Ví dụ:
+#
+# CPU:
+# 2 * 0.8 / 5 ≈ 320m
+#
+# Memory:
+# 4096Mi * 0.8 / 5 ≈ 655Mi
+#
+# Có thể chọn:
+#
+# requests:
+#   cpu: 300m
+#   memory: 600Mi
+#
+# limits:
+#   cpu: 400m
+#   memory: 700Mi
+
+
+# ----------------------------------------------------------
+# Bước 4 - Edit Deployment
+# ----------------------------------------------------------
+
+kubectl edit deployment blog-app -n eager-fox
+
+# Thêm giống nhau vào:
+#
+# spec.template.spec.initContainers[]
+#
+# và
+#
+# spec.template.spec.containers[]
+
+resources:
+  requests:
+    cpu: "300m"
+    memory: "600Mi"
+  limits:
+    cpu: "400m"
+    memory: "700Mi"
+
+
+# ----------------------------------------------------------
+# Bước 5 - Scale Deployment lên 5
+# ----------------------------------------------------------
+
+kubectl scale deployment blog-app \
+  -n eager-fox \
+  --replicas=5
+
+
+# ----------------------------------------------------------
+# Bước 6 - Chờ Rollout
+# ----------------------------------------------------------
+
+kubectl rollout status deployment blog-app \
+  -n eager-fox
+
+
+# ----------------------------------------------------------
+# Bước 7 - Kiểm Tra
+# ----------------------------------------------------------
+
+kubectl get pods \
+  -n eager-fox \
+  -l app=blog-app
+
+kubectl describe deployment blog-app \
+  -n eager-fox
+
+
+# ----------------------------------------------------------
+# Bước 8 - Verify
+# ----------------------------------------------------------
+
+./verify.sh
+
+
+# ==========================================================
+# KẾT QUẢ MONG ĐỢI
+# ==========================================================
+
+# ✓ Deployment:
+#
+# blog-app
+#
+# ✓ Namespace:
+#
+# eager-fox
+#
+# ✓ Replicas:
+#
+# 5
+#
+# ✓ Resource Requests:
+#
+# CPU configured
+# Memory configured
+#
+# ✓ Resource Limits:
+#
+# CPU configured
+# Memory configured
+#
+# ✓ Init Container:
+#
+# Requests giống Main Container
+# Limits giống Main Container
+#
+# ✓ Pods:
+#
+# 5 Running
+#
+# ✓ Verify:
+#
+# Question 4 PASSED
