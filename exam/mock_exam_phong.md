@@ -1,5 +1,11 @@
-# Ex 1
+# Ex 1 Reattach an Orphaned PersistentVolume
 ```cmd 
+k get pv -A # Doc Persistent Volume
+k describe pv <pv-name>
+k edit pv existing-pv # Remove claimRef
+k patch pv redis-pv --type=merge -p '{"spec": "{claimRef: null}' # or patch 
+vi redis.yaml
+
 k get pv -A
 # Check pv status, claimRef, storage class
 vi q1.yaml
@@ -15,6 +21,35 @@ volumeBindingMode: WaitForFirstConsumer
 
 ```
 
+# Ex 2 Argo CD via Helm Template Without CRDs
+```cmd 
+helm repo add argo-helm https://argoproj.github.io/argo-helm
+helm repo update
+k create ns gitops-ns
+helm search repo argo
+helm template argocd argo-helm/argo-cd --version=7.9.0 -n gitops-ns --set crds.install=false > /root/argocd-template.yaml
+
+```
+
+# Ex 3 Sidecar Container Sharing a Log Volume
+```cmd 
+k edit deployment ...
+k rollout status deployment apache-web
+k logs deploy/apache-web -c log-shipper --tail=5 # thấy log stream từ container chính
+```
+
+# Ex. 4  Fair Resource Allocation Across Pods
+
+```cmd 
+# Keywords: Limit ranges
+kubectl scale --replicas=0 blog-app #1
+k edit deploy blog-app #2 Edit resources.limit
+k get node
+k describe node node01 | grep -A5 Allo
+echo $((1846520 * 80 / 100 / 5))
+# Use K8s docs to edit Pod template in Deploy
+
+```
 # CKA 2026 - Ex 8: Install a CNI That Enforces Network Policy
 
 ## Goal
@@ -438,8 +473,8 @@ Verify service + kernel
 Node ready for Kubernetes
 ```
 
-# CKA 2026 - Ex 10: Migrate Ingress to Gateway API
-
+# Ex 10: Migrate Ingress to Gateway API
+https://gateway-api.sigs.k8s.io/guides/getting-started/migrating-from-ingress/ 
 ## Goal
 Migrate existing api-ingress to Kubernetes Gateway API.
 
@@ -471,7 +506,7 @@ Ingress api-ingress
    |
 Service api-service:80
    |
-     Pod
+  Pod
 ```
 
 **After:**
@@ -486,7 +521,7 @@ HTTPRoute api-route
    |
 Service api-service:80
    |
-     Pod
+  Pod
 ```
 
 ## Step 1 - Inspect existing Ingress
@@ -642,8 +677,15 @@ Attach parentRefs
 Verify HTTPS routing
 ```
 
-# CKA 2026 - Ex 12: Choose the Least-Permissive NetworkPolicy
-
+# Ex 11: Expose a Deployment via NodePort and Ingress
+```cmd
+ k expose deployment echo-server -n ns --name=echo-svc --type NodePort --port 9090 --target-pod 9090
+ # Describ deployment de tim xem --target-pod bang bao nhieu
+```
+# Ex 12: Choose the Least-Permissive NetworkPolicy
+```cmd 
+k get networkpolicy -n api-tier k exec -n web-tier deploy/web-tier -- \ curl -s --max-time 5 api-tier-service.api-tier.svc.cluster.local:8080
+```
 ## Goal
 Select the safest NetworkPolicy.
 
