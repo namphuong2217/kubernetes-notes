@@ -1,10 +1,19 @@
 # Mock exams
+## Opened questions
+Mock exam 1: 7, 10, 11
+Mock exam 2: 2, 5, 6, 7, 8(confirm only)
 
+```cmd 
+k exec -it redis-storage -- /bin/sh
+ls /data/redis/
+k run super-user-pod --image=busybox:1.28 --command sleep 4800 --dry-run=client -o yaml > 3.yaml
+crictl ps -aux
+```
 Lay Camera microsoft
 Monitor
 
 sau khi em xem qua thì:
-câu 1: đề em thi yêu cầu tạo storage class, config storage class đó thành default storage class sau đó tạo pvc sử dụng sc đó và mount pvc cho pod
+câu 1: có trong đề thi
 câu 2: có trong đề thi
 câu 3: có trong đề thi
 câu 4: có trong đề thi
