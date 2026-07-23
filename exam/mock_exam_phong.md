@@ -1,3 +1,12 @@
+# Practice Experience
+1. Phai the `storageClassname: ""` thi PV va PVC moi tim duoc nhau do co san default Storage Class
+2. Quen `helm repo update`. `--set crds.install=false`
+3. Dung initContainer thi gap loi file ko ton tai -> Dung container thu 2 hoac touch file trong initiContainer
+```cmd 
+   touch /var/log/apache-web.log
+   tail -f /var/log/apache-web.log
+```
+4. 
 # Ex 1 Reattach an Orphaned PersistentVolume
 ```cmd 
 k get pv -A # Doc Persistent Volume

@@ -46,6 +46,7 @@ metadata:
   name: redis-data
   namespace: redis-store
 spec:
+  storageClassName: ""
   accessModes:
     - ReadWriteOnce
   resources:
