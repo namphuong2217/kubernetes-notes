@@ -1077,3 +1077,8 @@ kubelet restarts static pod
      ↓
 Control Plane recovered
 ```
+
+# Ex 15
+k expose deploy web-front -n svc-lab --containerPort=3000 --type=NodePort
+
+    containerPort: 3000

@@ -1,9 +1,16 @@
 # Mock exams
 ## Opened questions
+Dprecated
 Mock exam 1: 7, 10, 11
 Mock exam 2: 2, 5, 6, 7, 8(confirm only)
+New
+Mock exam 1
 
 ```cmd 
+k api-resources
+k --help
+k explain
+curl http://$NODE_IP:$NODE_PORT
 k exec -it redis-storage -- /bin/sh
 ls /data/redis/
 k run super-user-pod --image=busybox:1.28 --command sleep 4800 --dry-run=client -o yaml > 3.yaml
