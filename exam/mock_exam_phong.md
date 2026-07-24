@@ -3,6 +3,54 @@
 2. Quen `helm repo update`. `--set crds.install=false`
 3. Dung initContainer thi gap loi file ko ton tai -> Dung container thu 2 hoac touch file trong initiContainer
 4. CPU "2" co nghia la 2Gi 1Gi = 1000m, Ki, Mi, Gi
+5. Phai nho `kubectl explain hpa.spec` de biet `behavior` nam duoi `spec`
+6. Lam lai
+7. Quen lay 900000 tru di mot
+8. Lam lai
+9. Lam lai
+10. Doc sot `A GatewayClass named nginx-gw is already installed.`. Kiem tra bang lenh `kubectl describe httproute api-route, kubectl describe gateway api-gateway`
+11. `curl NODEIP:NODEPORT/ping`
+```cmd
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: echo-ing
+  namespace: echo-lab
+spec:
+  ingressClassName: nginx-example
+  rules:
+  - host: "echo.example.local"
+    http:
+      paths:
+      - path: /ping
+        pathType: Prefix
+        backend:
+          service:
+            name: echo-svc
+            port:
+              number: 9090
+```
+12. Nho cach `curl url `: 
+```cmd
+    controlplane ~ ✖ k get svc -A
+    NAMESPACE     NAME               TYPE           CLUSTER-IP     EXTERNAL-IP      PORT(S)                      AGE
+    api-tier      api-tier-service   ClusterIP      10.43.6.183    <none>           8080/TCP                     11m
+    default       kubernetes         ClusterIP      10.43.0.1      <none>           443/TCP                      31m
+    kube-system   kube-dns           ClusterIP      10.43.0.10     <none>           53/UDP,53/TCP,9153/TCP       30m
+    kube-system   metrics-server     ClusterIP      10.43.12.240   <none>           443/TCP                      30m
+    kube-system   traefik            LoadBalancer   10.43.196.26   10.244.147.162   80:32165/TCP,443:31640/TCP   30m
+
+controlplane ~ ➜  k exec -n web-tier deploy/web-tier -- curl -s --max-time 5 api-tier-service.api-tier.svc.cluster.local:8080
+api-tier
+```
+13. Done
+14. Lam lai
+15. Lam lai. Type NodePort va Clusterip khac gi nhi. `kubectl get endpoints web-front-svc -n svc-lab`
+16. Lam lai
+
+
+
+
 ```cmd 
    touch /var/log/apache-web.log
    tail -f /var/log/apache-web.log
