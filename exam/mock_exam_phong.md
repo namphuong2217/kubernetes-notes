@@ -4,10 +4,10 @@
 3. Dung initContainer thi gap loi file ko ton tai -> Dung container thu 2 hoac touch file trong initiContainer
 4. CPU "2" co nghia la 2Gi 1Gi = 1000m, Ki, Mi, Gi
 5. Phai nho `kubectl explain hpa.spec` de biet `behavior` nam duoi `spec`
-6. Lam lai
+6. Xong
 7. Quen lay 900000 tru di mot
-8. Lam lai
-9. Lam lai
+8. Done. Doc lai
+9. Lam lai, Phai thuoc `/etc/sysctl.d/k8s.conf`
 10. Doc sot `A GatewayClass named nginx-gw is already installed.`. Kiem tra bang lenh `kubectl describe httproute api-route, kubectl describe gateway api-gateway`
 11. `curl NODEIP:NODEPORT/ping`
 ```cmd
@@ -45,8 +45,8 @@ api-tier
 ```
 13. Done
 14. Lam lai
-15. Lam lai. Type NodePort va Clusterip khac gi nhi. `kubectl get endpoints web-front-svc -n svc-lab`
-16. Lam lai
+15. Done. Type NodePort va Clusterip khac gi nhau. `kubectl get endpoints web-front-svc -n svc-lab`
+16. Done. Chu y append >, >> `echo "${SERVICE_IP} tls-check.k8s.local" >> /etc/hosts`
 
 
 
