@@ -1,4 +1,6 @@
 # Practice Experience
+Cau an diem: 2,6,8,9
+Cac cau lam tiep: 11-16
 1. Phai the `storageClassname: ""` thi PV va PVC moi tim duoc nhau do co san default Storage Class
 2. Quen `helm repo update`. `--set crds.install=false`
 3. Dung initContainer thi gap loi file ko ton tai -> Dung container thu 2 hoac touch file trong initiContainer
@@ -132,8 +134,21 @@ So the Pods become schedulable because their requests are smaller. The limits ma
 5. Phai nho `kubectl explain hpa.spec` de biet `behavior` nam duoi `spec`
 6. Xong
 7. Quen lay 900000 tru di mot
+Phai k rollout restart deploy <name>
 8. Done. Doc lai
 9. Lam lai, Phai thuoc `/etc/sysctl.d/k8s.conf`
+Enable and start it:
+
+sudo systemctl enable cri-docker
+sudo systemctl start cri-docker
+
+Verify:
+
+systemctl status cri-docker
+
+You should see:
+
+Active: active (running)
 10. Doc sot `A GatewayClass named nginx-gw is already installed.`. Kiem tra bang lenh `kubectl describe httproute api-route, kubectl describe gateway api-gateway`
 11. `curl NODEIP:NODEPORT/ping`
 ```cmd
