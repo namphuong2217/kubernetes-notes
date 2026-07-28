@@ -11,6 +11,124 @@ or use tail -F, which is more tolerant:
 
 tail -F /var/log/apache-web.log
 4. CPU "2" co nghia la 2Gi 1Gi = 1000m, Ki, Mi, Gi
+In the exam, the question states: "You don't have to adjust resources limit - which makes me very confused. Because there were orignally only 2/3 Pods running due to lack of resources, if I don't adjust the resources limit, how can the deployment make 3/3 Pods run?
+The wording of this question is intentionally a little misleading. The important distinction is between requests (used by the scheduler) and limits (used at runtime).
+
+Why "don't adjust resource limits" is confusing
+
+If initially only 2/5 or 3/5 Pods were running because of insufficient resources, the scheduler was almost certainly rejecting the remaining Pods based on their resource requests, not their limits.
+
+Kubernetes scheduling works like this:
+
+Requests determine whether a Pod can be placed on a node.
+Limits do not affect scheduling (except that they are often set equal to requests).
+
+So if a Pod requests 500m CPU and you have a 1-core node:
+
+2 Pods × 500m = 1000m
+
+The scheduler cannot place a third Pod, even if the Pods are idle.
+
+Therefore, the fix is to reduce the requests. If the question says "configure identical resource requests and limits", you simply set both to the new value.
+
+How to solve
+1. Scale to zero
+kubectl scale deployment blog-app -n eager-fox --replicas=0
+2. Check allocatable resources
+kubectl describe node node01
+
+Example:
+
+Allocatable:
+cpu:      1
+memory:   1846516Ki
+3. Divide by 5 Pods
+
+CPU:
+
+1000m / 5 = 200m
+
+Memory:
+
+1846516Ki / 5 ≈ 369303Ki
+
+However, the question says:
+
+Leave enough overhead so the node remains stable.
+
+So don't use the full allocatable resources.
+
+A reasonable exam answer is something like
+
+requests:
+  cpu: 180m
+  memory: 320Mi
+
+limits:
+  cpu: 180m
+  memory: 320Mi
+
+or any value that gives all five Pods room while leaving some unused capacity.
+
+4. Configure both containers identically
+
+Both the init container and the main container should have exactly the same resources.
+
+Example:
+
+resources:
+  requests:
+    cpu: 180m
+    memory: 320Mi
+  limits:
+    cpu: 180m
+    memory: 320Mi
+
+Apply this to
+
+init-db
+blog-app
+5. Scale back
+kubectl scale deployment blog-app -n eager-fox --replicas=5
+
+Verify:
+
+kubectl get pods -n eager-fox
+
+All five should become Running.
+
+Why the instruction says "don't adjust limits"
+
+This is where many candidates get confused.
+
+Suppose the original Deployment looked like
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+Only two Pods fit on a 1-core node.
+
+Changing them to
+
+resources:
+  requests:
+    cpu: 180m
+    memory: 320Mi
+  limits:
+    cpu: 180m
+    memory: 320Mi
+
+does adjust the limits, but it also adjusts the requests. The important part is that you are not tuning limits independently—you keep requests and limits identical, exactly as the task asks.
+
+If the exam literally said "You don't have to adjust resource limits", it likely meant you don't need to optimize or calculate limits separately. Calculate one fair value, then set both requests and limits to that value for both containers.
+
+So the Pods become schedulable because their requests are smaller. The limits matching those requests is simply part of the required configuration.
+
 5. Phai nho `kubectl explain hpa.spec` de biet `behavior` nam duoi `spec`
 6. Xong
 7. Quen lay 900000 tru di mot
