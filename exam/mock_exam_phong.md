@@ -2,6 +2,14 @@
 1. Phai the `storageClassname: ""` thi PV va PVC moi tim duoc nhau do co san default Storage Class
 2. Quen `helm repo update`. `--set crds.install=false`
 3. Dung initContainer thi gap loi file ko ton tai -> Dung container thu 2 hoac touch file trong initiContainer
+If you want deterministic behavior, create the file before running tail:
+
+touch /var/log/apache-web.log
+exec tail -f /var/log/apache-web.log
+
+or use tail -F, which is more tolerant:
+
+tail -F /var/log/apache-web.log
 4. CPU "2" co nghia la 2Gi 1Gi = 1000m, Ki, Mi, Gi
 5. Phai nho `kubectl explain hpa.spec` de biet `behavior` nam duoi `spec`
 6. Xong
