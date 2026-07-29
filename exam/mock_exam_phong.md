@@ -1,6 +1,6 @@
 # Practice Experience
 Cau an diem: 2,6,8,9
-Cac cau lam tiep: 11-16
+Troubleshoot: 14
 1. Phai the `storageClassname: ""` thi PV va PVC moi tim duoc nhau do co san default Storage Class
 2. Quen `helm repo update`. `--set crds.install=false`
 3. Dung initContainer thi gap loi file ko ton tai -> Dung container thu 2 hoac touch file trong initiContainer
@@ -131,11 +131,11 @@ If the exam literally said "You don't have to adjust resource limits", it likely
 
 So the Pods become schedulable because their requests are smaller. The limits matching those requests is simply part of the required configuration.
 
-5. Phai nho `kubectl explain hpa.spec` de biet `behavior` nam duoi `spec`
+5. Xong. Phai nho `kubectl explain hpa.spec` de biet `behavior` nam duoi `spec`
 6. Xong
-7. Quen lay 900000 tru di mot
+7. Xong. Quen lay 900000 tru di mot
 Phai k rollout restart deploy <name>
-8. Done. Doc lai
+8. Xong
 9. Lam lai, Phai thuoc `/etc/sysctl.d/k8s.conf`
 Enable and start it:
 
@@ -171,23 +171,61 @@ spec:
             port:
               number: 9090
 ```
-12. Nho cach `curl url `: 
+NodePort (vi du 32795) duoc su dung under the hood khi nao?
+The short answer is:
+
+A NodePort is opened on every node in the cluster, not just on the node where the Pod is running.
+What about the Ingress?
+
+Notice your test:
+
+curl http://172.30.1.2:31753/ping
+
+does not use the Ingress at all.
+
+You're accessing the NodePort Service directly.
+
+Your Ingress would normally be tested like this:
+
+curl -H "Host: echo.example.local" http://<INGRESS-IP>/ping
+
+The request flow is then:
+
+Client
+      |
+Ingress Controller
+      |
+Ingress
+      |
+echo-svc
+      |
+Pod
+
+Whereas your current curl goes:
+
+Client
+      |
+NodePort Service
+      |
+Pod
+
+So the fact that both node IPs work is entirely due to the behavior of NodePort, not because of the Ingress.
+12. Nho cach `curl url `:
 ```cmd
     controlplane ~ ✖ k get svc -A
     NAMESPACE     NAME               TYPE           CLUSTER-IP     EXTERNAL-IP      PORT(S)                      AGE
     api-tier      api-tier-service   ClusterIP      10.43.6.183    <none>           8080/TCP                     11m
-    default       kubernetes         ClusterIP      10.43.0.1      <none>           443/TCP                      31m
-    kube-system   kube-dns           ClusterIP      10.43.0.10     <none>           53/UDP,53/TCP,9153/TCP       30m
-    kube-system   metrics-server     ClusterIP      10.43.12.240   <none>           443/TCP                      30m
-    kube-system   traefik            LoadBalancer   10.43.196.26   10.244.147.162   80:32165/TCP,443:31640/TCP   30m
-
+    
 controlplane ~ ➜  k exec -n web-tier deploy/web-tier -- curl -s --max-time 5 api-tier-service.api-tier.svc.cluster.local:8080
 api-tier
 ```
-13. Done
-14. Lam lai
-15. Done. Type NodePort va Clusterip khac gi nhau. `kubectl get endpoints web-front-svc -n svc-lab`
+Phai kiem tra xem PODs co dung label ko 
+kubectl get pods -n web-tier --show-labels
+13. Hoc thuoc, viet ra truoc k patch sc local-path -p '{"metadata": {"annotations": {"storageclass.kubernetes.io/is-default-class": "false"}}}'
+14. Xong
+15. Done. `kubectl get endpoints web-front-svc -n svc-lab`
 16. Done. Chu y append >, >> `echo "${SERVICE_IP} tls-check.k8s.local" >> /etc/hosts`
+Phai nho k rollout restart deploy de update ConfigMap
 
 
 
