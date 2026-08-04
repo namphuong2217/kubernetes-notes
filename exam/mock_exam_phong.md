@@ -1,5 +1,5 @@
 # Practice Experience
-Cau an diem: 2,6,8,9
+Cau an diem: 9 (systemctl restart kubelet)
 Troubleshoot: 14
 1. Phai the `storageClassname: ""` thi PV va PVC moi tim duoc nhau do co san default Storage Class
 2. Quen `helm repo update`. `--set crds.install=false`
